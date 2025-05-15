@@ -79,7 +79,7 @@ export default function Hero() {
                 {/* Text content */}
                 <div className="flex flex-col items-center lg:items-start justify-center w-full lg:w-1/2 text-center lg:text-left order-2 lg:order-1">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-4">
-                        Hi, I'm <span className="text-pink-400">Sahithya D</span>
+                        Hi,I&apos;m <span className="text-pink-400">Sahithya D</span>
                     </h1>
 
                     <div className="h-12 sm:h-16 mb-4 flex items-center justify-center lg:justify-start">
