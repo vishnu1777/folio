@@ -15,9 +15,13 @@ export default function LoadingAnimation() {
     useEffect(() => {
         if (!isMounted) return; // Skip if not mounted yet
 
+        // Use a fixed increment to reach 100% in exactly 3 seconds
+        // 15 steps (200ms * 15 = 3000ms) to reach 100%
+        const increment = 100 / 15;
+
         const interval = setInterval(() => {
             setProgress((prevProgress) => {
-                const newProgress = prevProgress + Math.random() * 10;
+                const newProgress = prevProgress + increment;
                 return newProgress > 100 ? 100 : newProgress;
             });
         }, 200);

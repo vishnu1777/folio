@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -31,103 +31,200 @@ const Navbar = () => {
         { name: 'Contact', path: '/contact' },
     ];
 
-    return (
-        <motion.nav
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
-                }`}
-        >
-            {/* Container that matches Hero exactly */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
-                <div className="flex justify-between items-center h-16">
-                    {/* Logo */}
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="flex-shrink-0 font-bold text-2xl"
-                    >
-                        <Link href="/">
-                            <span className="text-white cursor-pointer">Portfolio</span>
-                        </Link>
-                    </motion.div>
+    // Enhanced sparkle animation variants for more variety
+    const sparkleVariants = {
+        initial: { opacity: 0, scale: 0 },
+        animate: index => ({
+            opacity: [0, 1, 0],
+            scale: [0, 1, 0],
+            transition: {
+                duration: 1.5 + Math.random(),
+                repeat: Infinity,
+                repeatDelay: 1 + Math.random() * 2,
+                ease: "easeInOut",
+                delay: Math.random() * 2
+            }
+        })
+    };
 
-                    {/* Desktop Menu */}
-                    <div className="hidden md:block">
-                        <div className="ml-10 flex items-center space-x-8">
-                            {navLinks.map((link) => (
+    // Full-screen menu animations
+    const overlayVariants = {
+        closed: { opacity: 0 },
+        open: { opacity: 1 }
+    };
+
+    const menuItemVariants = {
+        closed: { opacity: 0, y: 20 },
+        open: i => ({
+            opacity: 1,
+            y: 0,
+            transition: { delay: 0.1 + i * 0.1 }
+        })
+    };
+
+    return (
+        <>
+            <motion.nav
+                initial={{ y: -100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className={`fixed w-full z-50 transition-all duration-300 
+                    ${scrolled
+                        ? 'bg-gradient-to-br from-gray-900/90 via-purple-900/90 to-pink-800/90 backdrop-blur-md shadow-lg'
+                        : 'bg-gradient-to-br from-gray-900/70 via-purple-900/70 to-pink-800/70 backdrop-blur-sm'
+                    }`}
+            >
+                {/* Sparkle container - positioned absolute to cover navbar */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {/* Generate 20 random sparkles */}
+                    {[...Array(20)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute rounded-full"
+                            style={{
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                width: `${2 + Math.random() * 2}px`,
+                                height: `${2 + Math.random() * 2}px`,
+                                background: Math.random() > 0.5 ? 'white' : 'rgba(255, 192, 203, 0.8)',
+                                boxShadow: Math.random() > 0.5
+                                    ? '0 0 4px 1px rgba(255, 255, 255, 0.8), 0 0 8px 2px rgba(255, 192, 203, 0.8)'
+                                    : '0 0 4px 1px rgba(255, 192, 203, 0.8), 0 0 8px 2px rgba(255, 255, 255, 0.8)'
+                            }}
+                            variants={sparkleVariants}
+                            initial="initial"
+                            animate="animate"
+                            custom={i}
+                        />
+                    ))}
+                </div>
+
+                {/* Container that matches Hero exactly */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
+                    <div className="flex justify-between items-center h-16">
+                        {/* Logo */}
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex-shrink-0 font-bold text-2xl"
+                        >
+                            <Link href="/">
+                                <span className="text-white cursor-pointer font-cursive" style={{ textShadow: '0 0 5px rgba(255, 182, 193, 0.8)' }}>Portfolio</span>
+                            </Link>
+                        </motion.div>
+
+                        {/* Desktop Menu */}
+                        <div className="hidden md:block">
+                            <div className="ml-10 flex items-center space-x-8">
+                                {navLinks.map((link) => (
+                                    <motion.div
+                                        key={link.name}
+                                        whileHover={{
+                                            y: -3,
+                                            scale: 1.1,
+                                            textShadow: '0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 182, 193, 0.8)'
+                                        }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <Link href={link.path}>
+                                            <span className="text-white hover:text-pink-300 transition-all cursor-pointer">
+                                                {link.name}
+                                            </span>
+                                        </Link>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Mobile menu button */}
+                        <div className="md:hidden flex items-center">
+                            <button
+                                onClick={() => setMenuOpen(!menuOpen)}
+                                className="text-gray-300 hover:text-pink-300 focus:outline-none z-50"
+                                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                            >
+                                <span className="sr-only">Open main menu</span>
+                                <div className="w-5 h-5 relative">
+                                    <span
+                                        className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-300 to-purple-400 transform transition duration-300 ease-in-out ${menuOpen ? 'rotate-45 translate-y-1.5' : 'translate-y-0'}`}
+                                        style={{ top: '30%', boxShadow: '0 0 5px rgba(255, 182, 193, 0.8)' }}
+                                    />
+                                    <span
+                                        className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-300 to-purple-400 transform transition duration-300 ease-in-out ${menuOpen ? 'opacity-0' : 'opacity-100'}`}
+                                        style={{ top: '50%', boxShadow: '0 0 5px rgba(255, 182, 193, 0.8)' }}
+                                    />
+                                    <span
+                                        className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-300 to-purple-400 transform transition duration-300 ease-in-out ${menuOpen ? '-rotate-45 -translate-y-1.5' : 'translate-y-0'}`}
+                                        style={{ top: '70%', boxShadow: '0 0 5px rgba(255, 182, 193, 0.8)' }}
+                                    />
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.nav>
+
+            {/* Full-screen overlay menu for mobile */}
+            <AnimatePresence>
+                {menuOpen && (
+                    <motion.div
+                        className="fixed inset-0 md:hidden bg-gradient-to-br from-gray-900/98 via-purple-900/98 to-pink-800/98 backdrop-blur-md z-40 flex items-center justify-center"
+                        initial="closed"
+                        animate="open"
+                        exit="closed"
+                        variants={overlayVariants}
+                    >
+                        {/* Sparkle container for mobile menu */}
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            {[...Array(30)].map((_, i) => (
+                                <motion.div
+                                    key={i}
+                                    className="absolute rounded-full"
+                                    style={{
+                                        left: `${Math.random() * 100}%`,
+                                        top: `${Math.random() * 100}%`,
+                                        width: `${2 + Math.random() * 3}px`,
+                                        height: `${2 + Math.random() * 3}px`,
+                                        background: Math.random() > 0.5 ? 'white' : 'rgba(255, 192, 203, 0.8)',
+                                        boxShadow: Math.random() > 0.5
+                                            ? '0 0 5px 2px rgba(255, 255, 255, 0.8), 0 0 10px 3px rgba(255, 192, 203, 0.8)'
+                                            : '0 0 5px 2px rgba(255, 192, 203, 0.8), 0 0 10px 3px rgba(255, 255, 255, 0.8)'
+                                    }}
+                                    variants={sparkleVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    custom={i}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center space-y-6 p-8">
+                            {navLinks.map((link, i) => (
                                 <motion.div
                                     key={link.name}
-                                    whileHover={{ y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    variants={menuItemVariants}
+                                    custom={i}
                                 >
                                     <Link href={link.path}>
-                                        <span className="text-white hover:text-purple-300 transition-colors cursor-pointer">
+                                        <motion.div
+                                            className="text-white text-center text-xl font-medium px-6 py-2"
+                                            onClick={() => setMenuOpen(false)}
+                                            whileHover={{
+                                                scale: 1.1,
+                                                color: "#f9a8d4", // pink-300
+                                                textShadow: '0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 182, 193, 0.8)'
+                                            }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
                                             {link.name}
-                                        </span>
+                                        </motion.div>
                                     </Link>
                                 </motion.div>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Mobile menu button - UPDATED */}
-                    <div className="md:hidden flex items-center">
-                        <button
-                            onClick={() => setMenuOpen(!menuOpen)}
-                            className="text-gray-300 hover:text-pink-400 focus:outline-none"
-                        >
-                            <span className="sr-only">Open main menu</span>
-                            <div className="w-5 h-5 relative">
-                                <span
-                                    className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-400 to-purple-500 transform transition duration-300 ease-in-out ${menuOpen ? 'rotate-45 translate-y-1.5' : 'translate-y-0'
-                                        }`}
-                                    style={{ top: '30%' }}
-                                />
-                                <span
-                                    className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-400 to-purple-500 transform transition duration-300 ease-in-out ${menuOpen ? 'opacity-0' : 'opacity-100'
-                                        }`}
-                                    style={{ top: '50%' }}
-                                />
-                                <span
-                                    className={`block absolute h-0.5 w-full bg-gradient-to-r from-pink-400 to-purple-500 transform transition duration-300 ease-in-out ${menuOpen ? '-rotate-45 -translate-y-1.5' : 'translate-y-0'
-                                        }`}
-                                    style={{ top: '70%' }}
-                                />
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Menu - UPDATED with right alignment and reduced width */}
-            <motion.div
-                className={`md:hidden ${menuOpen ? 'block' : 'hidden'}`}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{
-                    opacity: menuOpen ? 1 : 0,
-                    height: menuOpen ? 'auto' : 0
-                }}
-                transition={{ duration: 0.3 }}
-                style={{ zIndex: 999 }}
-            >
-                {/* Mobile menu container with right alignment and reduced width */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
-                    <div className="w-30 px-2 flex-col items-center justify-center pt-2 pb-3 space-y-1 bg-gradient-to-br from-gray-900/95 via-purple-900/95 to-pink-800/95 backdrop-blur-md rounded-b-lg">
-                        {navLinks.map((link) => (
-                            <Link key={link.name} href={link.path}>
-                                <div
-                                    className="text-white hover:bg-white/10 flex items-center justify-center px-3 py-2  rounded-md text-sm font-medium transition-colors cursor-pointer text-right"
-                                    onClick={() => setMenuOpen(false)}
-                                >
-                                    {link.name}
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </motion.div>
-        </motion.nav>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 };
 

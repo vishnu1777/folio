@@ -18,6 +18,9 @@ module.exports = {
                     '50%': { opacity: 0 },
                 },
             },
+            boxShadow: {
+                'glow': '0 0 15px rgba(236, 72, 153, 0.5)'
+            }
         },
     },
 }
