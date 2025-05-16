@@ -1,32 +1,50 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { PulseLoader, GridLoader, ScaleLoader } from 'react-spinners';
+import { useState, useEffect, useRef } from 'react';
+import { PulseLoader, GridLoader } from 'react-spinners';
 
 export default function LoadingAnimation() {
     const [progress, setProgress] = useState(0);
     const [isMounted, setIsMounted] = useState(false);
+    const intervalRef = useRef(null);
+    const hasStartedRef = useRef(false);
 
     // First useEffect to handle hydration
     useEffect(() => {
         setIsMounted(true);
+
+        // Clean up when component unmounts
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
     }, []);
 
     // Second useEffect to handle progress after component is mounted
+    // Uses refs to prevent multiple setIntervals
     useEffect(() => {
-        if (!isMounted) return; // Skip if not mounted yet
+        if (!isMounted || hasStartedRef.current) return; // Skip if not mounted or already started
+
+        hasStartedRef.current = true; // Mark that we've started the animation
 
         // Use a fixed increment to reach 100% in exactly 3 seconds
         // 15 steps (200ms * 15 = 3000ms) to reach 100%
         const increment = 100 / 15;
 
-        const interval = setInterval(() => {
+        intervalRef.current = setInterval(() => {
             setProgress((prevProgress) => {
                 const newProgress = prevProgress + increment;
-                return newProgress > 100 ? 100 : newProgress;
+                if (newProgress >= 100) {
+                    // Clear interval once we reach 100%
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                    return 100;
+                }
+                return newProgress;
             });
         }, 200);
 
-        return () => clearInterval(interval);
     }, [isMounted]);
 
     return (
@@ -60,7 +78,7 @@ export default function LoadingAnimation() {
             )}
 
             {/* Loading text - only show percentage if mounted */}
-            <div className="text-white text-center font-[family-name:var(--font-geist-mono)] tracking-widest">
+            <div className="text-white text-center font-mono tracking-widest">
                 <span
                     className="inline-block"
                     style={{
