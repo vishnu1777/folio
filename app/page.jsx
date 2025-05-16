@@ -7,6 +7,8 @@ import Navbar from './components/Navbar';
 import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
+import Certificates from './components/Certificates';
+
 export default function Home() {
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +31,7 @@ export default function Home() {
       <Hero />
       <Projects />
       <Skills />
-      {/* You can add more sections here */}
+      <Certificates />
       <Contact />
       {/* Footer or other components can go here */}
     </main>
