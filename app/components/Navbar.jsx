@@ -1,20 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState('home');
 
     // Handle scroll effect
     useEffect(() => {
         const handleScroll = () => {
+            // Nav background effect
             if (window.scrollY > 50) {
                 setScrolled(true);
             } else {
                 setScrolled(false);
+            }
+
+            // Active section tracking
+            const sections = ['home', 'projects', 'skills', 'certificates', 'contact'];
+            const scrollPosition = window.scrollY + 100; // Offset for better UX
+
+            for (const section of sections) {
+                // Special case for "home" to target the hero section which might not have the id "home"
+                const elementId = section === 'home' ? 'hero' : section;
+                const element = document.getElementById(elementId);
+
+                if (element) {
+                    const top = element.offsetTop;
+                    const height = element.offsetHeight;
+
+                    if (scrollPosition >= top && scrollPosition < top + height) {
+                        setActiveSection(section);
+                        break;
+                    }
+                }
             }
         };
 
@@ -22,13 +43,30 @@ const Navbar = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Navigation links
+    // Smooth scroll function
+    const scrollToSection = (e, sectionId) => {
+        e.preventDefault();
+        setMenuOpen(false);
+
+        // Special case for "home" to target the hero section
+        const elementId = sectionId === 'home' ? 'hero' : sectionId;
+        const element = document.getElementById(elementId);
+
+        if (element) {
+            window.scrollTo({
+                top: element.offsetTop - 80, // Offset for navbar height
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    // Navigation links - updated with hash routes
     const navLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'About', path: '/about' },
-        { name: 'Projects', path: '/projects' },
-        { name: 'Skills', path: '/skills' },
-        { name: 'Contact', path: '/contact' },
+        { name: 'Home', path: 'home' },
+        { name: 'Projects', path: 'projects' },
+        { name: 'Skills', path: 'skills' },
+        { name: 'Certificates', path: 'certificates' },
+        { name: 'Contact', path: 'contact' },
     ];
 
     // Enhanced sparkle animation variants for more variety
@@ -107,9 +145,9 @@ const Navbar = () => {
                             whileHover={{ scale: 1.05 }}
                             className="flex-shrink-0 font-bold text-2xl"
                         >
-                            <Link href="/">
+                            <a href="#home" onClick={(e) => scrollToSection(e, 'home')}>
                                 <span className="text-white cursor-pointer font-cursive" style={{ textShadow: '0 0 5px rgba(255, 182, 193, 0.8)' }}>Portfolio</span>
-                            </Link>
+                            </a>
                         </motion.div>
 
                         {/* Desktop Menu */}
@@ -125,11 +163,16 @@ const Navbar = () => {
                                         }}
                                         whileTap={{ scale: 0.95 }}
                                     >
-                                        <Link href={link.path}>
-                                            <span className="text-white hover:text-pink-300 transition-all cursor-pointer">
-                                                {link.name}
-                                            </span>
-                                        </Link>
+                                        <a
+                                            href={`#${link.path === 'home' ? 'hero' : link.path}`}
+                                            onClick={(e) => scrollToSection(e, link.path)}
+                                            className={`text-white transition-all cursor-pointer ${activeSection === link.path
+                                                ? "text-pink-300 font-medium"
+                                                : "hover:text-pink-300"
+                                                }`}
+                                        >
+                                            {link.name}
+                                        </a>
                                     </motion.div>
                                 ))}
                             </div>
@@ -204,10 +247,15 @@ const Navbar = () => {
                                     variants={menuItemVariants}
                                     custom={i}
                                 >
-                                    <Link href={link.path}>
+                                    <a
+                                        href={`#${link.path === 'home' ? 'hero' : link.path}`}
+                                        onClick={(e) => scrollToSection(e, link.path)}
+                                    >
                                         <motion.div
-                                            className="text-white text-center text-xl font-medium px-6 py-2"
-                                            onClick={() => setMenuOpen(false)}
+                                            className={`text-center text-xl font-medium px-6 py-2 ${activeSection === link.path
+                                                ? "text-pink-300"
+                                                : "text-white"
+                                                }`}
                                             whileHover={{
                                                 scale: 1.1,
                                                 color: "#f9a8d4", // pink-300
@@ -217,7 +265,7 @@ const Navbar = () => {
                                         >
                                             {link.name}
                                         </motion.div>
-                                    </Link>
+                                    </a>
                                 </motion.div>
                             ))}
                         </div>

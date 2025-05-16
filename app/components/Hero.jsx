@@ -72,7 +72,7 @@ export default function Hero() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-pink-800 px-4 sm:px-6 py-8 sm:py-12">
+        <div id="hero" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-pink-800 px-4 sm:px-6 py-8 sm:py-12">
             {/* Main container with improved responsive spacing and alignment */}
             <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-12">
                 {/* Text content - adjusted spacing for better alignment with image */}

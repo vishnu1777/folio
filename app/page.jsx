@@ -26,7 +26,7 @@ export default function Home() {
   }
 
   return (
-    <main>
+    <main id='home'>
       <Navbar />
       <Hero />
       <Projects />
