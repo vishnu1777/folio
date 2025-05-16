@@ -100,7 +100,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Container that matches Hero exactly */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-6 ">
                     <div className="flex justify-between items-center h-16">
                         {/* Logo */}
                         <motion.div
