@@ -21,11 +21,11 @@ export default function Projects() {
         }
     }, [isInView, controls]);
 
-
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await fetch('/api/projects'); // Adjust the API endpoint as needed
+                setLoading(true);
+                const response = await fetch('/api/projects');
                 const data = await response.json();
                 setProjects(data);
                 setLoading(false);
@@ -36,8 +36,14 @@ export default function Projects() {
             }
         }
         fetchProjects();
-    }, [])
+    }, []);
 
+    useEffect(() => {
+        if (!loading && projects.length > 0) {
+            // Force trigger animation when loading completes
+            controls.start('visible');
+        }
+    }, [loading, projects, controls]);
 
     // Animation variants
     const containerVariants = {
@@ -90,105 +96,129 @@ export default function Projects() {
                     </motion.p>
                 </div>
 
-                <motion.div
-                    ref={ref}
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate={controls}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
-                >
-                    {projects.map((project) => (
-                        <motion.div
-                            key={project.id}
-                            variants={cardVariants}
-                            whileHover={{
-                                y: isMobile ? -5 : -10, // smaller hover effect on mobile
-                                transition: { duration: 0.3 }
-                            }}
-                            className="bg-gray-900/40 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl border border-pink-500/10 group h-full flex flex-col"
-                        >
-                            {/* Project Image with Overlay */}
-                            <div className="relative h-40 sm:h-48 overflow-hidden">
-                                <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-30 group-hover:opacity-50 transition-opacity duration-500`}></div>
-                                <img
-                                    src={project.image}
-                                    alt={project.title}
-                                    className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-110"
-                                />
-
-                                {/* Sparkle overlay effect - fewer sparkles on mobile */}
-                                <div className="absolute inset-0 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-                                    {[...Array(isMobile ? 5 : 10)].map((_, i) => (
-                                        <motion.div
-                                            key={i}
-                                            className="absolute rounded-full bg-white"
-                                            style={{
-                                                left: `${Math.random() * 100}%`,
-                                                top: `${Math.random() * 100}%`,
-                                                width: `${2 + Math.random() * 2}px`,
-                                                height: `${2 + Math.random() * 2}px`,
-                                            }}
-                                            animate={{
-                                                opacity: [0, 1, 0],
-                                                scale: [0, 1, 0],
-                                                transition: {
-                                                    duration: 1.5 + Math.random(),
-                                                    repeat: Infinity,
-                                                    repeatDelay: 1 + Math.random() * 3,
-                                                    delay: Math.random() * 2,
-                                                },
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-
-                                {/* Action buttons - optimized for touch on mobile */}
-                                <div className={`absolute ${isMobile ? 'bottom-0 opacity-80' : '-bottom-12'} left-0 right-0 flex justify-between px-4 py-2 ${!isMobile && 'group-hover:bottom-0'} transition-all duration-500 ease-in-out`}>
-                                    <motion.a
-                                        href={project.github}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="bg-gray-800/90 p-2 sm:p-3 rounded-full text-white hover:text-pink-400 hover:shadow-glow transition-all duration-300"
-                                        whileHover={{ scale: 1.1, rotate: -5 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <FaGithub className="text-lg sm:text-xl" />
-                                    </motion.a>
-                                    <motion.a
-                                        href={project.live}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="bg-gray-800/90 p-2 sm:p-3 rounded-full text-white hover:text-pink-400 hover:shadow-glow transition-all duration-300"
-                                        whileHover={{ scale: 1.1, rotate: 5 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <FaExternalLinkAlt className="text-lg sm:text-xl" />
-                                    </motion.a>
-                                </div>
+                {loading ? (
+                    <div
+                        className="flex flex-col justify-center items-center h-64"
+                    >
+                        <div className="relative">
+                            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="animate-ping h-3 w-3 rounded-full bg-purple-500 opacity-75"></div>
                             </div>
+                        </div>
+                        <p className="mt-4 text-pink-300 font-medium animate-pulse">
+                            Loading awesome projects...
+                        </p>
+                    </div>
+                ) : projects.length > 0 ? (
+                    <motion.div
+                        ref={ref}
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible" // Force "visible" instead of using controls
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+                    >
+                        {projects.map((project) => (
+                            <motion.div
+                                key={project.id}
+                                variants={cardVariants}
+                                whileHover={{
+                                    y: isMobile ? -5 : -10,
+                                    transition: { duration: 0.3 }
+                                }}
+                                className="bg-gray-900/90 backdrop-blur-lg rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-pink-500/20 group h-full flex flex-col"
+                            >
+                                {/* Project Image with Overlay */}
+                                <div className="relative h-40 sm:h-48 overflow-hidden">
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-30 group-hover:opacity-50 transition-opacity duration-500`}></div>
+                                    <img
+                                        src={project.image}
+                                        alt={project.title}
+                                        className="w-full h-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-110"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = `https://placehold.co/600x400/${project.color.split('-')[2].split(' ')[0].replace('from-', '').replace('to-', '')}/FFFFFF?text=${project.title}`;
+                                        }}
+                                    />
 
-                            {/* Project Content */}
-                            <div className="p-4 sm:p-6 flex-grow flex flex-col">
-                                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 text-center group-hover:text-pink-400 transition-colors duration-300">
-                                    {project.title}
-                                </h3>
-                                <p className="text-gray-300 text-xs sm:text-sm mb-4 flex-grow">
-                                    {project.description}
-                                </p>
-                                <div className="flex flex-wrap gap-1 sm:gap-2 justify-center mt-auto">
-                                    {project.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30"
+                                    {/* Sparkle overlay effect - fewer sparkles on mobile */}
+                                    <div className="absolute inset-0 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                                        {[...Array(isMobile ? 5 : 10)].map((_, i) => (
+                                            <motion.div
+                                                key={i}
+                                                className="absolute rounded-full bg-white"
+                                                style={{
+                                                    left: `${Math.random() * 100}%`,
+                                                    top: `${Math.random() * 100}%`,
+                                                    width: `${2 + Math.random() * 2}px`,
+                                                    height: `${2 + Math.random() * 2}px`,
+                                                }}
+                                                animate={{
+                                                    opacity: [0, 1, 0],
+                                                    scale: [0, 1, 0],
+                                                    transition: {
+                                                        duration: 1.5 + Math.random(),
+                                                        repeat: Infinity,
+                                                        repeatDelay: 1 + Math.random() * 3,
+                                                        delay: Math.random() * 2,
+                                                    },
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Action buttons - optimized for touch on mobile */}
+                                    <div className={`absolute ${isMobile ? 'bottom-0 opacity-80' : '-bottom-12'} left-0 right-0 flex justify-between px-4 py-2 ${!isMobile && 'group-hover:bottom-0'} transition-all duration-500 ease-in-out`}>
+                                        <motion.a
+                                            href={project.github}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-gray-800/90 p-2 sm:p-3 rounded-full text-white hover:text-pink-400 hover:shadow-glow transition-all duration-300"
+                                            whileHover={{ scale: 1.1, rotate: -5 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
-                                            {tag}
-                                        </span>
-                                    ))}
+                                            <FaGithub className="text-lg sm:text-xl" />
+                                        </motion.a>
+                                        <motion.a
+                                            href={project.live}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-gray-800/90 p-2 sm:p-3 rounded-full text-white hover:text-pink-400 hover:shadow-glow transition-all duration-300"
+                                            whileHover={{ scale: 1.1, rotate: 5 }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            <FaExternalLinkAlt className="text-lg sm:text-xl" />
+                                        </motion.a>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </motion.div>
+
+                                {/* Project Content */}
+                                <div className="p-4 sm:p-6 flex-grow flex flex-col bg-gray-900/60">
+                                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 text-center group-hover:text-pink-400 transition-colors duration-300">
+                                        {project.title}
+                                    </h3>
+                                    <p className="text-gray-300 text-xs sm:text-sm mb-4 flex-grow">
+                                        {project.description}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1 sm:gap-2 justify-center mt-auto">
+                                        {project.tags.map((tag, index) => (
+                                            <span
+                                                key={index}
+                                                className="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30"
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                ) : (
+                    <div className="text-center text-pink-300 py-16">
+                        No projects found. Check back soon!
+                    </div>
+                )}
 
                 {/* View more projects button */}
                 <motion.div
