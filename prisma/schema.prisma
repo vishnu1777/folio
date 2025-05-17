@@ -19,3 +19,13 @@ model Project {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
+
+model Skill {
+    id          Int      @id @default(autoincrement())
+    name        String
+    image       String
+    proficiency Int
+    category    String?  @default("technical") // Can categorize skills as "technical", "soft", etc.
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}

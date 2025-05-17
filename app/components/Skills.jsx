@@ -9,8 +9,20 @@ const Skills = () => {
     const [explodedSkill, setExplodedSkill] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
     const [animationsReady, setAnimationsReady] = useState(false);
+    const [skills, setSkills] = useState([]);
+    const [loading, setLoading] = useState(true);
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, threshold: 0.1 });
+
+    useEffect(() => {
+        console.log("Skills state:", {
+            isInView,
+            animationsReady,
+            isMobile,
+            skillsCount: skills.length,
+            loading
+        });
+    }, [isInView, animationsReady, isMobile, skills, loading]);
 
     // Client-side only code
     useEffect(() => {
@@ -35,6 +47,39 @@ const Skills = () => {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Fetch skills from API
+    useEffect(() => {
+        const fetchSkills = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/skills');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("response", data)
+                setSkills(data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching skills:', error);
+                // Fallback to hardcoded skills if API fails
+                setSkills([
+                    { name: 'JavaScript', image: '/skills/javascript.png', proficiency: 90 },
+                    { name: 'React', image: '/skills/react.png', proficiency: 85 },
+                    { name: 'NextJS', image: '/skills/nextjs.png', proficiency: 82 },
+                    { name: 'HTML/CSS', image: '/skills/html-css.png', proficiency: 95 },
+                    { name: 'UI/UX', image: '/skills/uiux.png', proficiency: 80 },
+                    { name: 'Tailwind', image: '/skills/tailwind.png', proficiency: 88 },
+                    { name: 'TypeScript', image: '/skills/typescript.png', proficiency: 75 },
+                    { name: 'Node.js', image: '/skills/nodejs.png', proficiency: 70 },
+                ]);
+                setLoading(false);
+            }
+        };
+
+        fetchSkills();
+    }, []);
+
     // Reset explosion after animation completes
     useEffect(() => {
         if (explodedSkill !== null) {
@@ -45,17 +90,6 @@ const Skills = () => {
             return () => clearTimeout(timer);
         }
     }, [explodedSkill]);
-
-    const skills = [
-        { name: 'JavaScript', image: '/skills/javascript.png', proficiency: 90 },
-        { name: 'React', image: '/skills/react.png', proficiency: 85 },
-        { name: 'NextJS', image: '/skills/nextjs.png', proficiency: 82 },
-        { name: 'HTML/CSS', image: '/skills/html-css.png', proficiency: 95 },
-        { name: 'UI/UX', image: '/skills/uiux.png', proficiency: 80 },
-        { name: 'Tailwind', image: '/skills/tailwind.png', proficiency: 88 },
-        { name: 'TypeScript', image: '/skills/typescript.png', proficiency: 75 },
-        { name: 'Node.js', image: '/skills/nodejs.png', proficiency: 70 },
-    ];
 
     // Calculate color based on proficiency - updated to match projects aesthetic
     const getColorClass = (proficiency) => {
@@ -159,10 +193,8 @@ const Skills = () => {
                 <div className='flex-col items-center justify-center '>
                     <h2 className="text-4xl font-bold text-center text-white mb-12">
                         My <span className="text-pink-400">Skills</span>
-
                     </h2>
-                    <span className="text-sm flex  items-center justify-center font-normal opacity-80">(click to explode)</span>
-
+                    <span className="text-sm flex items-center justify-center font-normal opacity-80">(click to explode)</span>
 
                     {/* Decorative line like in Projects section */}
                     <motion.div
@@ -172,335 +204,348 @@ const Skills = () => {
                         className="h-1 bg-gradient-to-r from-pink-500 to-purple-500 mx-auto mb-10 rounded-full"
                     />
                 </div>
-                <div ref={ref} className="flex flex-wrap justify-center">
-                    <div className="w-full">
-                        {isMobile ? (
-                            // Mobile layout: Better drop-in animation
-                            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
-                                {skills.map((skill, index) => (
-                                    <motion.div
-                                        key={`mobile-${skill.name}`}
-                                        className="relative flex justify-center"
-                                        initial={{ y: -100, opacity: 0, scale: 0.8 }}
-                                        animate={animationsReady ? {
-                                            y: 0,
-                                            opacity: 1,
-                                            scale: 1
-                                        } : {}}
-                                        transition={{
-                                            type: "spring",
-                                            duration: 0.7,
-                                            delay: index * 0.1,
-                                            damping: 12,
-                                            stiffness: 100
-                                        }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <div
-                                            className={`relative w-[110px] h-[110px] rounded-full border-2 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
-                                            onClick={() => handleSkillExplode(index)}
-                                        >
-                                            {/* Bomb fuse - ONLY AT THE TOP - purple/pink theme */}
-                                            <div className="absolute -top-3 left-1/2 w-1 h-6 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
-                                            {/* Skill logo */}
-                                            <div className="w-14 h-14 relative">
-                                                <Image
-                                                    src={skill.image}
-                                                    alt={skill.name}
-                                                    fill
-                                                    className="object-contain"
-                                                    priority={index < 4}
-                                                />
-                                            </div>
-
-                                            {/* Skill name */}
-                                            <p className="text-white text-xs font-medium text-center mt-2">{skill.name}</p>
-
-                                            {/* Spark animation ONLY at top - with pink theme */}
-                                            <motion.div
-                                                className="absolute -top-1 left-1/2 w-2 h-2 bg-pink-300 rounded-full -translate-x-1/2"
-                                                animate={{
-                                                    opacity: [1, 0.5, 1],
-                                                    scale: [1, 1.5, 1]
-                                                }}
-                                                transition={{
-                                                    duration: 0.8,
-                                                    repeat: Infinity
-                                                }}
-                                            />
-
-                                            {/* Fire effect on surface when exploded */}
-                                            {explodedSkill === index && (
-                                                <>
-                                                    {/* Surface fire ring - pink/purple theme */}
-                                                    <motion.div
-                                                        className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-r from-purple-800/40 to-pink-900/40"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                    >
-                                                        {/* Inner burning effect - pink/purple theme */}
-                                                        {generateSparkles().map((sparkle, i) => (
-                                                            <motion.div
-                                                                key={i}
-                                                                className={`absolute w-1.5 h-1.5 rounded-full ${sparkle.color === 'pink' ? 'bg-pink-400' : 'bg-purple-500'}`}
-                                                                style={{
-                                                                    left: "50%",
-                                                                    top: "50%",
-                                                                }}
-                                                                initial={{ opacity: 0, scale: 0 }}
-                                                                animate={{
-                                                                    opacity: [0, 1, 0],
-                                                                    scale: [0, 1, 0.5],
-                                                                    x: sparkle.x * 0.7, // Constrain to keep inside
-                                                                    y: sparkle.y * 0.7, // Constrain to keep inside
-                                                                }}
-                                                                transition={{
-                                                                    duration: sparkle.duration,
-                                                                    delay: sparkle.delay,
-                                                                    repeat: 3,
-                                                                    repeatType: "loop"
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </motion.div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {/* Explosion effect - contained */}
-                                        <AnimatePresence>
-                                            {explodedSkill === index && (
-                                                <>
-                                                    {/* Proficiency display */}
-                                                    <motion.div
-                                                        className="absolute inset-0 flex items-center justify-center z-20"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        transition={{ duration: 0.3, delay: 0.1 }}
-                                                    >
-                                                        <div className="bg-black/80 backdrop-blur-sm rounded-full w-24 h-24 flex flex-col items-center justify-center">
-                                                            <span className="text-white font-bold text-xl">{skill.proficiency}%</span>
-                                                            <div className="w-14 h-1.5 mt-1 bg-gray-700 rounded-full overflow-hidden">
-                                                                <motion.div
-                                                                    className={`h-full rounded-full bg-gradient-to-r ${getColorClass(skill.proficiency)}`}
-                                                                    initial={{ width: 0 }}
-                                                                    animate={{ width: "100%" }}
-                                                                    transition={{ duration: 0.4 }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-
-                                                    {/* Fire particles - pink/purple, smaller radius, contained */}
-                                                    {generateParticles().slice(0, 12).map((particle, i) => (
-                                                        <motion.div
-                                                            key={i}
-                                                            className={`absolute bg-gradient-to-br ${getParticleGradientClass(particle.color)} blur-[1px]`}
-                                                            style={{
-                                                                width: `${Math.random() * 3 + 2}px`,
-                                                                height: `${Math.random() * 5 + 2}px`,
-                                                                borderRadius: "50%",
-                                                            }}
-                                                            initial={{ x: 0, y: 0, opacity: 0 }}
-                                                            animate={{
-                                                                x: particle.x * 0.4, // Very narrow explosion
-                                                                y: particle.y * 0.4, // Very narrow explosion
-                                                                opacity: [particle.opacity, 0],
-                                                                scale: [particle.scale, 0],
-                                                            }}
-                                                            transition={{
-                                                                duration: 0.7,
-                                                                ease: "easeOut"
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </>
-                                            )}
-                                        </AnimatePresence>
-                                    </motion.div>
-                                ))}
+                {loading ? (
+                    <div className="flex justify-center items-center p-12">
+                        <div className="relative">
+                            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="animate-ping h-3 w-3 rounded-full bg-purple-500 opacity-75"></div>
                             </div>
-                        ) : (
-                            // Desktop layout: Bomb throwing animation
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-                                {skills.map((skill, index) => (
-                                    <motion.div
-                                        key={`desktop-${skill.name}`}
-                                        className="relative flex justify-center"
-                                        initial={{
-                                            x: -300,
-                                            y: 100,
-                                            opacity: 0,
-                                            rotate: -90,
-                                            scale: 0.5
-                                        }}
-                                        animate={isInView ? {
-                                            x: 0,
-                                            y: 0,
-                                            opacity: 1,
-                                            rotate: 0,
-                                            scale: 1
-                                        } : {}}
-                                        transition={{
-                                            type: "spring",
-                                            damping: 12,
-                                            stiffness: 60,
-                                            delay: index * 0.15,
-                                        }}
-                                        whileHover={{
-                                            y: -10,
-                                            scale: 1.05,
-                                            transition: { duration: 0.3, ease: "easeInOut" }
-                                        }}
-                                    >
-                                        <motion.div
-                                            className={`relative w-40 h-40 rounded-full border-4 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
-                                            onMouseEnter={() => setHoveredSkill(index)}
-                                            onMouseLeave={() => setHoveredSkill(null)}
-                                            onClick={() => handleSkillExplode(index)}
-                                        >
-                                            {/* Bomb fuse - ONLY AT THE TOP */}
-                                            <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
-
-                                            {/* Skill logo */}
-                                            <div className="w-24 h-24 relative mb-2">
-                                                <Image
-                                                    src={skill.image}
-                                                    alt={skill.name}
-                                                    fill
-                                                    className="object-contain"
-                                                    priority={index < 4}
-                                                />
-                                            </div>
-
-                                            {/* Skill name */}
-                                            <p className="text-white text-lg font-medium text-center">{skill.name}</p>
-
-                                            {/* Spark animation ONLY at top */}
-                                            <motion.div
-                                                className="absolute -top-2 left-1/2 w-3 h-3 bg-pink-300 rounded-full -translate-x-1/2"
-                                                animate={{
-                                                    opacity: [1, 0.5, 1],
-                                                    scale: [1, 1.5, 1]
-                                                }}
-                                                transition={{
-                                                    duration: 0.8,
-                                                    repeat: Infinity
-                                                }}
-                                            />
-
-                                            {/* Hover glow effect */}
-                                            {hoveredSkill === index && (
-                                                <motion.div
-                                                    className="absolute inset-0 bg-gradient-to-br from-pink-500/30 to-purple-500/30 rounded-full"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.3 }}
-                                                />
-                                            )}
-
-                                            {/* Fire effect on surface when exploded */}
-                                            {explodedSkill === index && (
-                                                <>
-                                                    {/* Surface fire ring - pink/purple theme */}
-                                                    <motion.div
-                                                        className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-r from-purple-800/40 to-pink-900/40"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                    >
-                                                        {/* Inner burning effect - pink/purple theme */}
-                                                        {generateSparkles().map((sparkle, i) => (
-                                                            <motion.div
-                                                                key={i}
-                                                                className={`absolute w-2.5 h-2.5 rounded-full ${sparkle.color === 'pink' ? 'bg-pink-400' : 'bg-purple-500'}`}
-                                                                style={{
-                                                                    left: "50%",
-                                                                    top: "50%",
-                                                                }}
-                                                                initial={{ opacity: 0, scale: 0 }}
-                                                                animate={{
-                                                                    opacity: [0, 1, 0],
-                                                                    scale: [0, 1, 0.5],
-                                                                    x: sparkle.x * 0.9, // Constrain to keep inside
-                                                                    y: sparkle.y * 0.9, // Constrain to keep inside
-                                                                }}
-                                                                transition={{
-                                                                    duration: sparkle.duration,
-                                                                    delay: sparkle.delay,
-                                                                    repeat: 3,
-                                                                    repeatType: "loop"
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </motion.div>
-                                                </>
-                                            )}
-                                        </motion.div>
-
-                                        {/* Explosion effect */}
-                                        <AnimatePresence>
-                                            {explodedSkill === index && (
-                                                <>
-                                                    {/* Proficiency display */}
-                                                    <motion.div
-                                                        className="absolute inset-0 flex items-center justify-center z-20"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        transition={{ duration: 0.3, delay: 0.1 }}
-                                                    >
-                                                        <div className="bg-black/80 backdrop-blur-sm rounded-full w-32 h-32 flex flex-col items-center justify-center">
-                                                            <span className="text-white font-bold text-3xl">{skill.proficiency}%</span>
-                                                            <div className="w-20 h-2 mt-2 bg-gray-700 rounded-full overflow-hidden">
-                                                                <motion.div
-                                                                    className={`h-full rounded-full bg-gradient-to-r ${getColorClass(skill.proficiency)}`}
-                                                                    initial={{ width: 0 }}
-                                                                    animate={{ width: "100%" }}
-                                                                    transition={{ duration: 0.4 }}
-                                                                />
-                                                            </div>
-                                                            <p className="mt-2 text-white text-sm">Proficiency</p>
-                                                        </div>
-                                                    </motion.div>
-
-                                                    {/* Fire particles - pink/purple, contained within */}
-                                                    {generateParticles().map((particle, i) => (
-                                                        <motion.div
-                                                            key={i}
-                                                            className={`absolute bg-gradient-to-br ${getParticleGradientClass(particle.color)} blur-[1px]`}
-                                                            style={{
-                                                                width: `${Math.random() * 5 + 2}px`,
-                                                                height: `${Math.random() * 7 + 3}px`,
-                                                                borderRadius: "50%",
-                                                            }}
-                                                            initial={{ x: 0, y: 0, opacity: 0 }}
-                                                            animate={{
-                                                                x: particle.x * 0.5,
-                                                                y: particle.y * 0.5,
-                                                                opacity: [particle.opacity, 0],
-                                                                scale: [particle.scale, 0],
-                                                                rotate: particle.rotation
-                                                            }}
-                                                            transition={{
-                                                                duration: 0.8,
-                                                                ease: "easeOut"
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </>
-                                            )}
-                                        </AnimatePresence>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        )}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div ref={ref} className="flex flex-wrap justify-center">
+                        <div className="w-full">
+                            {isMobile ? (
+                                // Mobile layout: Better drop-in animation
+                                <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+                                    {skills.map((skill, index) => (
+                                        <motion.div
+                                            key={`mobile-${skill.name}`}
+                                            className="relative flex justify-center"
+                                            initial={{ y: -100, opacity: 0, scale: 0.8 }}
+                                            animate={animationsReady ? {
+                                                y: 0,
+                                                opacity: 1,
+                                                scale: 1
+                                            } : {}}
+                                            transition={{
+                                                type: "spring",
+                                                duration: 0.7,
+                                                delay: index * 0.1,
+                                                damping: 12,
+                                                stiffness: 100
+                                            }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            <div
+                                                className={`relative w-[110px] h-[110px] rounded-full border-2 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
+                                                onClick={() => handleSkillExplode(index)}
+                                            >
+                                                {/* Bomb fuse - ONLY AT THE TOP - purple/pink theme */}
+                                                <div className="absolute -top-3 left-1/2 w-1 h-6 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
+
+                                                {/* Skill logo */}
+                                                <div className="w-14 h-14 relative">
+                                                    <Image
+                                                        src={skill.image}
+                                                        alt={skill.name}
+                                                        fill
+                                                        className="object-contain"
+                                                        priority={index < 4}
+                                                    />
+                                                </div>
+
+                                                {/* Skill name */}
+                                                <p className="text-white text-xs font-medium text-center mt-2">{skill.name}</p>
+
+                                                {/* Spark animation ONLY at top - with pink theme */}
+                                                <motion.div
+                                                    className="absolute -top-1 left-1/2 w-2 h-2 bg-pink-300 rounded-full -translate-x-1/2"
+                                                    animate={{
+                                                        opacity: [1, 0.5, 1],
+                                                        scale: [1, 1.5, 1]
+                                                    }}
+                                                    transition={{
+                                                        duration: 0.8,
+                                                        repeat: Infinity
+                                                    }}
+                                                />
+
+                                                {/* Fire effect on surface when exploded */}
+                                                {explodedSkill === index && (
+                                                    <>
+                                                        {/* Surface fire ring - pink/purple theme */}
+                                                        <motion.div
+                                                            className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-r from-purple-800/40 to-pink-900/40"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            exit={{ opacity: 0 }}
+                                                        >
+                                                            {/* Inner burning effect - pink/purple theme */}
+                                                            {generateSparkles().map((sparkle, i) => (
+                                                                <motion.div
+                                                                    key={i}
+                                                                    className={`absolute w-1.5 h-1.5 rounded-full ${sparkle.color === 'pink' ? 'bg-pink-400' : 'bg-purple-500'}`}
+                                                                    style={{
+                                                                        left: "50%",
+                                                                        top: "50%",
+                                                                    }}
+                                                                    initial={{ opacity: 0, scale: 0 }}
+                                                                    animate={{
+                                                                        opacity: [0, 1, 0],
+                                                                        scale: [0, 1, 0.5],
+                                                                        x: sparkle.x * 0.7, // Constrain to keep inside
+                                                                        y: sparkle.y * 0.7, // Constrain to keep inside
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: sparkle.duration,
+                                                                        delay: sparkle.delay,
+                                                                        repeat: 3,
+                                                                        repeatType: "loop"
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </motion.div>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Explosion effect - contained */}
+                                            <AnimatePresence>
+                                                {explodedSkill === index && (
+                                                    <>
+                                                        {/* Proficiency display */}
+                                                        <motion.div
+                                                            className="absolute inset-0 flex items-center justify-center z-20"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            exit={{ opacity: 0 }}
+                                                            transition={{ duration: 0.3, delay: 0.1 }}
+                                                        >
+                                                            <div className="bg-black/80 backdrop-blur-sm rounded-full w-24 h-24 flex flex-col items-center justify-center">
+                                                                <span className="text-white font-bold text-xl">{skill.proficiency}%</span>
+                                                                <div className="w-14 h-1.5 mt-1 bg-gray-700 rounded-full overflow-hidden">
+                                                                    <motion.div
+                                                                        className={`h-full rounded-full bg-gradient-to-r ${getColorClass(skill.proficiency)}`}
+                                                                        initial={{ width: 0 }}
+                                                                        animate={{ width: "100%" }}
+                                                                        transition={{ duration: 0.4 }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+
+                                                        {/* Fire particles - pink/purple, smaller radius, contained */}
+                                                        {generateParticles().slice(0, 12).map((particle, i) => (
+                                                            <motion.div
+                                                                key={i}
+                                                                className={`absolute bg-gradient-to-br ${getParticleGradientClass(particle.color)} blur-[1px]`}
+                                                                style={{
+                                                                    width: `${Math.random() * 3 + 2}px`,
+                                                                    height: `${Math.random() * 5 + 2}px`,
+                                                                    borderRadius: "50%",
+                                                                }}
+                                                                initial={{ x: 0, y: 0, opacity: 0 }}
+                                                                animate={{
+                                                                    x: particle.x * 0.4, // Very narrow explosion
+                                                                    y: particle.y * 0.4, // Very narrow explosion
+                                                                    opacity: [particle.opacity, 0],
+                                                                    scale: [particle.scale, 0],
+                                                                }}
+                                                                transition={{
+                                                                    duration: 0.7,
+                                                                    ease: "easeOut"
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            ) : (
+                                // Desktop layout: Bomb throwing animation - FIXED VERSION
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                                    {skills.map((skill, index) => (
+                                        <motion.div
+                                            key={`desktop-${skill.name}`}
+                                            className="relative flex justify-center"
+                                            initial={{
+                                                x: -300,
+                                                y: 100,
+                                                opacity: 0,
+                                                rotate: -90,
+                                                scale: 0.5
+                                            }}
+                                            // FIXED: Simplified animation condition - removed dependency on both isInView and animationsReady
+                                            animate={{
+                                                x: 0,
+                                                y: 0,
+                                                opacity: 1,
+                                                rotate: 0,
+                                                scale: 1
+                                            }}
+                                            transition={{
+                                                type: "spring",
+                                                damping: 12,
+                                                stiffness: 60,
+                                                delay: index * 0.15,
+                                            }}
+                                            whileHover={{
+                                                y: -10,
+                                                scale: 1.05,
+                                                transition: { duration: 0.3, ease: "easeInOut" }
+                                            }}
+                                        >
+                                            <motion.div
+                                                className={`relative w-40 h-40 rounded-full border-4 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
+                                                onMouseEnter={() => setHoveredSkill(index)}
+                                                onMouseLeave={() => setHoveredSkill(null)}
+                                                onClick={() => handleSkillExplode(index)}
+                                            >
+                                                {/* Bomb fuse - ONLY AT THE TOP */}
+                                                <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
+
+                                                {/* Skill logo */}
+                                                <div className="w-24 h-24 relative mb-2">
+                                                    <Image
+                                                        src={skill.image}
+                                                        alt={skill.name}
+                                                        fill
+                                                        className="object-contain"
+                                                        priority={index < 4}
+                                                    />
+                                                </div>
+
+                                                {/* Skill name */}
+                                                <p className="text-white text-lg font-medium text-center">{skill.name}</p>
+
+                                                {/* Spark animation ONLY at top */}
+                                                <motion.div
+                                                    className="absolute -top-2 left-1/2 w-3 h-3 bg-pink-300 rounded-full -translate-x-1/2"
+                                                    animate={{
+                                                        opacity: [1, 0.5, 1],
+                                                        scale: [1, 1.5, 1]
+                                                    }}
+                                                    transition={{
+                                                        duration: 0.8,
+                                                        repeat: Infinity
+                                                    }}
+                                                />
+
+                                                {/* Hover glow effect */}
+                                                {hoveredSkill === index && (
+                                                    <motion.div
+                                                        className="absolute inset-0 bg-gradient-to-br from-pink-500/30 to-purple-500/30 rounded-full"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        transition={{ duration: 0.3 }}
+                                                    />
+                                                )}
+
+                                                {/* Fire effect on surface when exploded */}
+                                                {explodedSkill === index && (
+                                                    <>
+                                                        {/* Surface fire ring - pink/purple theme */}
+                                                        <motion.div
+                                                            className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-r from-purple-800/40 to-pink-900/40"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            exit={{ opacity: 0 }}
+                                                        >
+                                                            {/* Inner burning effect - pink/purple theme */}
+                                                            {generateSparkles().map((sparkle, i) => (
+                                                                <motion.div
+                                                                    key={i}
+                                                                    className={`absolute w-2.5 h-2.5 rounded-full ${sparkle.color === 'pink' ? 'bg-pink-400' : 'bg-purple-500'}`}
+                                                                    style={{
+                                                                        left: "50%",
+                                                                        top: "50%",
+                                                                    }}
+                                                                    initial={{ opacity: 0, scale: 0 }}
+                                                                    animate={{
+                                                                        opacity: [0, 1, 0],
+                                                                        scale: [0, 1, 0.5],
+                                                                        x: sparkle.x * 0.9, // Constrain to keep inside
+                                                                        y: sparkle.y * 0.9, // Constrain to keep inside
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: sparkle.duration,
+                                                                        delay: sparkle.delay,
+                                                                        repeat: 3,
+                                                                        repeatType: "loop"
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </motion.div>
+                                                    </>
+                                                )}
+                                            </motion.div>
+
+                                            {/* Explosion effect */}
+                                            <AnimatePresence>
+                                                {explodedSkill === index && (
+                                                    <>
+                                                        {/* Proficiency display */}
+                                                        <motion.div
+                                                            className="absolute inset-0 flex items-center justify-center z-20"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            exit={{ opacity: 0 }}
+                                                            transition={{ duration: 0.3, delay: 0.1 }}
+                                                        >
+                                                            <div className="bg-black/80 backdrop-blur-sm rounded-full w-32 h-32 flex flex-col items-center justify-center">
+                                                                <span className="text-white font-bold text-3xl">{skill.proficiency}%</span>
+                                                                <div className="w-20 h-2 mt-2 bg-gray-700 rounded-full overflow-hidden">
+                                                                    <motion.div
+                                                                        className={`h-full rounded-full bg-gradient-to-r ${getColorClass(skill.proficiency)}`}
+                                                                        initial={{ width: 0 }}
+                                                                        animate={{ width: "100%" }}
+                                                                        transition={{ duration: 0.4 }}
+                                                                    />
+                                                                </div>
+                                                                <p className="mt-2 text-white text-sm">Proficiency</p>
+                                                            </div>
+                                                        </motion.div>
+
+                                                        {/* Fire particles - pink/purple, contained within */}
+                                                        {generateParticles().map((particle, i) => (
+                                                            <motion.div
+                                                                key={i}
+                                                                className={`absolute bg-gradient-to-br ${getParticleGradientClass(particle.color)} blur-[1px]`}
+                                                                style={{
+                                                                    width: `${Math.random() * 5 + 2}px`,
+                                                                    height: `${Math.random() * 7 + 3}px`,
+                                                                    borderRadius: "50%",
+                                                                }}
+                                                                initial={{ x: 0, y: 0, opacity: 0 }}
+                                                                animate={{
+                                                                    x: particle.x * 0.5,
+                                                                    y: particle.y * 0.5,
+                                                                    opacity: [particle.opacity, 0],
+                                                                    scale: [particle.scale, 0],
+                                                                    rotate: particle.rotation
+                                                                }}
+                                                                transition={{
+                                                                    duration: 0.8,
+                                                                    ease: "easeOut"
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </section>
     );
