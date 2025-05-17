@@ -9,7 +9,8 @@ export default function Projects() {
     const controls = useAnimation();
     const ref = useRef(null);
     const isInView = useInView(ref, { once: false, amount: 0.1 });
-
+    const [projects, setProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
     // Responsive hooks for adaptive animations
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -20,49 +21,23 @@ export default function Projects() {
         }
     }, [isInView, controls]);
 
-    // Sample project data - replace with your own projects
-    const projects = [
-        {
-            id: 1,
-            title: 'E-Commerce Platform',
-            description: 'A fully responsive e-commerce platform built with Next.js, featuring product filtering, cart functionality, and payment processing.',
-            tags: ['Next.js', 'Tailwind CSS', 'Stripe', 'MongoDB'],
-            image: '/projects/ecommerce.jpg', // Add your project images to public folder
-            github: 'https://github.com/yourusername/ecommerce',
-            live: 'https://ecommerce-demo.vercel.app',
-            color: 'from-pink-500 to-purple-600'
-        },
-        {
-            id: 2,
-            title: 'Social Media Dashboard',
-            description: 'A comprehensive dashboard for social media analytics with real-time updates, data visualization, and user engagement metrics.',
-            tags: ['React', 'D3.js', 'Firebase', 'Material UI'],
-            image: '/projects/dashboard.jpg',
-            github: 'https://github.com/yourusername/social-dashboard',
-            live: 'https://social-dashboard.vercel.app',
-            color: 'from-purple-500 to-indigo-600'
-        },
-        {
-            id: 3,
-            title: 'AI Image Generator',
-            description: 'A web application that uses machine learning to generate unique images based on text prompts and user preferences.',
-            tags: ['Python', 'TensorFlow', 'React', 'Flask'],
-            image: '/projects/ai-generator.jpg',
-            github: 'https://github.com/yourusername/ai-image-gen',
-            live: 'https://ai-image-gen.vercel.app',
-            color: 'from-indigo-500 to-blue-600'
-        },
-        {
-            id: 4,
-            title: 'Personal Finance Tracker',
-            description: 'A mobile-responsive web app for tracking personal finances, with budget planning, expense categorization, and visual reports.',
-            tags: ['Vue.js', 'Node.js', 'Express', 'Chart.js'],
-            image: '/projects/finance.jpg',
-            github: 'https://github.com/yourusername/finance-tracker',
-            live: 'https://finance-tracker.vercel.app',
-            color: 'from-blue-500 to-cyan-600'
-        },
-    ];
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const response = await fetch('/api/projects'); // Adjust the API endpoint as needed
+                const data = await response.json();
+                setProjects(data);
+                setLoading(false);
+            }
+            catch (error) {
+                console.error('Error fetching projects:', error);
+                setLoading(false);
+            }
+        }
+        fetchProjects();
+    }, [])
+
 
     // Animation variants
     const containerVariants = {
