@@ -29,3 +29,20 @@ model Skill {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
+
+model Certificate {
+    id          Int      @id @default(autoincrement())
+    title       String
+    issuer      String
+    date        String // Using string for flexibility (e.g., "2023" or "May 2023")
+    image       String
+    link        String?
+    description String
+    color       String   @default("from-blue-500 to-teal-300")
+    size        String   @default("md")
+    orbitRadius Float    @default(1.0)
+    orbitSpeed  Int      @default(100)
+    startOffset Int      @default(0)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}

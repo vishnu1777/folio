@@ -8,6 +8,8 @@ import { FaExternalLinkAlt, FaTimesCircle, FaGraduationCap } from 'react-icons/f
 
 export default function Certificates() {
     const [activeCertificate, setActiveCertificate] = useState(null);
+    const [certificates, setCertificates] = useState([]);
+    const [loading, setLoading] = useState(true);
     const controls = useAnimation();
     const [ref, inView] = useInView({ threshold: 0.1, triggerOnce: false });
 
@@ -18,79 +20,45 @@ export default function Certificates() {
     // Reference to the certificates container
     const containerRef = useRef(null);
 
-    // Sample certificates data
-    const certificates = [
-        {
-            id: 1,
-            title: "AWS Cloud Practitioner",
-            issuer: "Amazon Web Services",
-            date: "2023",
-            image: "/certificates/aws-cert.jpg",
-            link: "https://www.credly.com/your-badge-link",
-            description: "Foundational understanding of AWS Cloud services, architecture, security, and compliance.",
-            color: "from-blue-500 to-teal-300",
-            size: "lg",
-            orbitRadius: 1.4,
-            orbitSpeed: 80,
-            startOffset: 0,
-        },
-        {
-            id: 2,
-            title: "React Developer",
-            issuer: "Meta",
-            date: "2022",
-            image: "/certificates/react-cert.jpg",
-            link: "https://www.coursera.org/your-certificate-link",
-            description: "Advanced React concepts including hooks, state management, context API and testing.",
-            color: "from-blue-400 to-indigo-500",
-            size: "md",
-            orbitRadius: 1,
-            orbitSpeed: 100,
-            startOffset: 120,
-        },
-        {
-            id: 3,
-            title: "JavaScript Algorithms",
-            issuer: "freeCodeCamp",
-            date: "2022",
-            image: "/certificates/js-cert.jpg",
-            link: "https://www.freecodecamp.org/your-certificate",
-            description: "Data structures, algorithms, and object-oriented programming in JavaScript.",
-            color: "from-yellow-400 to-orange-500",
-            size: "sm",
-            orbitRadius: 0.7,
-            orbitSpeed: 60,
-            startOffset: 240,
-        },
-        {
-            id: 4,
-            title: "UI/UX Design",
-            issuer: "Google",
-            date: "2023",
-            image: "/certificates/ui-ux-cert.jpg",
-            link: "https://www.coursera.org/your-certificate-link",
-            description: "User experience research, wireframing, prototyping, and testing interactive designs.",
-            color: "from-green-400 to-emerald-500",
-            size: "md",
-            orbitRadius: 1.2,
-            orbitSpeed: 90,
-            startOffset: 30,
-        },
-        {
-            id: 5,
-            title: "Fullstack Development",
-            issuer: "Udemy",
-            date: "2022",
-            image: "/certificates/fullstack-cert.jpg",
-            link: "https://www.udemy.com/your-certificate/",
-            description: "Building end-to-end web applications with modern frameworks and databases.",
-            color: "from-pink-500 to-purple-600",
-            size: "lg",
-            orbitRadius: 0.9,
-            orbitSpeed: 120,
-            startOffset: 190,
-        },
-    ];
+    // Fetch certificates from API
+    useEffect(() => {
+        const fetchCertificates = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/certificates');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch certificates');
+                }
+
+                const data = await response.json();
+                setCertificates(data);
+            } catch (error) {
+                console.error('Error fetching certificates:', error);
+                // Fallback to sample data if API fails
+                setCertificates([
+                    {
+                        id: 1,
+                        title: "AWS Cloud Practitioner",
+                        issuer: "Amazon Web Services",
+                        date: "2023",
+                        image: "/certificates/aws-cert.jpg",
+                        link: "https://www.credly.com/your-badge-link",
+                        description: "Foundational understanding of AWS Cloud services, architecture, security, and compliance.",
+                        color: "from-blue-500 to-teal-300",
+                        size: "lg",
+                        orbitRadius: 1.4,
+                        orbitSpeed: 80,
+                        startOffset: 0,
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCertificates();
+    }, []);
 
     useEffect(() => {
         if (inView) {
@@ -270,137 +238,149 @@ export default function Certificates() {
                     </motion.p>
                 </div>
 
-                {/* Certificates galaxy container */}
-                <motion.div
-                    ref={ref}
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate={controls}
-                    className="relative mx-auto"
-                    style={{ height: isMobile ? "500px" : "600px" }}
-                >
-                    {/* Central glow */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-pink-500/20 blur-2xl"></div>
-
-                    {/* Sun (central celestial body) */}
+                {/* Display loading state if certificates are loading */}
+                {loading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <div className="relative">
+                            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="animate-ping h-3 w-3 rounded-full bg-purple-500 opacity-75"></div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* Certificates galaxy container - render only when certificates are loaded */
                     <motion.div
-                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 z-10 flex items-center justify-center"
-                        animate={{
-                            boxShadow: ['0 0 20px 5px rgba(255, 105, 180, 0.6)', '0 0 30px 8px rgba(255, 105, 180, 0.8)', '0 0 20px 5px rgba(255, 105, 180, 0.6)'],
-                        }}
-                        transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            repeatType: "reverse"
-                        }}
+                        ref={ref}
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate={controls}
+                        className="relative mx-auto"
+                        style={{ height: isMobile ? "500px" : "600px" }}
                     >
-                        <FaGraduationCap className="text-white text-4xl" />
-                    </motion.div>
+                        {/* Central glow */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-pink-500/20 blur-2xl"></div>
 
-                    {/* Orbit paths (for visual effect) */}
-                    {certificates.map(cert => (
-                        <div
-                            key={`orbit-${cert.id}`}
-                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/10"
-                            style={{
-                                width: `${cert.orbitRadius * (isMobile ? 260 : 400)}px`,
-                                height: `${cert.orbitRadius * (isMobile ? 260 : 400)}px`
+                        {/* Sun (central celestial body) */}
+                        <motion.div
+                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 z-10 flex items-center justify-center"
+                            animate={{
+                                boxShadow: ['0 0 20px 5px rgba(255, 105, 180, 0.6)', '0 0 30px 8px rgba(255, 105, 180, 0.8)', '0 0 20px 5px rgba(255, 105, 180, 0.6)'],
                             }}
-                        ></div>
-                    ))}
+                            transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                repeatType: "reverse"
+                            }}
+                        >
+                            <FaGraduationCap className="text-white text-4xl" />
+                        </motion.div>
 
-                    {/* Certificate celestial bodies */}
-                    {certificates.map((certificate, index) => {
-                        // Calculate size based on the size property
-                        let size;
-                        switch (certificate.size) {
-                            case 'lg': size = isMobile ? 70 : 90; break;
-                            case 'md': size = isMobile ? 60 : 75; break;
-                            default: size = isMobile ? 50 : 65; // 'sm' is default
-                        }
-
-                        // Calculate orbit properties
-                        const orbitRadius = certificate.orbitRadius * (isMobile ? 130 : 200); // px
-                        const orbitDuration = certificate.orbitSpeed; // seconds
-
-                        return (
-                            <motion.div
-                                key={certificate.id}
-                                custom={index}
-                                variants={celestialBodyVariants}
-                                whileHover="hover"
-                                whileTap="tap"
-                                onClick={() => setActiveCertificate(certificate)}
-                                className="absolute cursor-pointer"
-                                animate={{
-                                    x: [
-                                        Math.cos((certificate.startOffset / 180) * Math.PI) * orbitRadius,
-                                        Math.cos(((certificate.startOffset + 90) / 180) * Math.PI) * orbitRadius,
-                                        Math.cos(((certificate.startOffset + 180) / 180) * Math.PI) * orbitRadius,
-                                        Math.cos(((certificate.startOffset + 270) / 180) * Math.PI) * orbitRadius,
-                                        Math.cos((certificate.startOffset / 180) * Math.PI) * orbitRadius,
-                                    ],
-                                    y: [
-                                        Math.sin((certificate.startOffset / 180) * Math.PI) * orbitRadius,
-                                        Math.sin(((certificate.startOffset + 90) / 180) * Math.PI) * orbitRadius,
-                                        Math.sin(((certificate.startOffset + 180) / 180) * Math.PI) * orbitRadius,
-                                        Math.sin(((certificate.startOffset + 270) / 180) * Math.PI) * orbitRadius,
-                                        Math.sin((certificate.startOffset / 180) * Math.PI) * orbitRadius,
-                                    ],
-                                }}
-                                transition={{
-                                    duration: orbitDuration,
-                                    repeat: Infinity,
-                                    ease: "linear"
-                                }}
+                        {/* Orbit paths (for visual effect) */}
+                        {certificates.map(cert => (
+                            <div
+                                key={`orbit-${cert.id}`}
+                                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/10"
                                 style={{
-                                    top: '50%',
-                                    left: '50%',
-                                    width: `${size}px`,
-                                    height: `${size}px`,
-                                    marginLeft: `-${size / 2}px`,
-                                    marginTop: `-${size / 2}px`,
+                                    width: `${cert.orbitRadius * (isMobile ? 260 : 400)}px`,
+                                    height: `${cert.orbitRadius * (isMobile ? 260 : 400)}px`
                                 }}
-                            >
-                                {/* Outer glow - using multiple layers for perfect circular glow */}
-                                <div className="absolute inset-0 rounded-full opacity-40"
-                                    style={{
-                                        background: `radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)`,
-                                        transform: 'scale(1.4)',
-                                    }}
-                                />
+                            ></div>
+                        ))}
 
-                                {/* Pulsing glow animation */}
+                        {/* Certificate celestial bodies */}
+                        {certificates.map((certificate, index) => {
+                            // Calculate size based on the size property
+                            let size;
+                            switch (certificate.size) {
+                                case 'lg': size = isMobile ? 70 : 90; break;
+                                case 'md': size = isMobile ? 60 : 75; break;
+                                default: size = isMobile ? 50 : 65; // 'sm' is default
+                            }
+
+                            // Calculate orbit properties
+                            const orbitRadius = certificate.orbitRadius * (isMobile ? 130 : 200); // px
+                            const orbitDuration = certificate.orbitSpeed; // seconds
+
+                            return (
                                 <motion.div
-                                    className="absolute inset-0 rounded-full"
-                                    style={{
-                                        background: `radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%)`,
-                                    }}
+                                    key={certificate.id}
+                                    custom={index}
+                                    variants={celestialBodyVariants}
+                                    whileHover="hover"
+                                    whileTap="tap"
+                                    onClick={() => setActiveCertificate(certificate)}
+                                    className="absolute cursor-pointer"
                                     animate={{
-                                        scale: [1.2, 1.5, 1.2],
+                                        x: [
+                                            Math.cos((certificate.startOffset / 180) * Math.PI) * orbitRadius,
+                                            Math.cos(((certificate.startOffset + 90) / 180) * Math.PI) * orbitRadius,
+                                            Math.cos(((certificate.startOffset + 180) / 180) * Math.PI) * orbitRadius,
+                                            Math.cos(((certificate.startOffset + 270) / 180) * Math.PI) * orbitRadius,
+                                            Math.cos((certificate.startOffset / 180) * Math.PI) * orbitRadius,
+                                        ],
+                                        y: [
+                                            Math.sin((certificate.startOffset / 180) * Math.PI) * orbitRadius,
+                                            Math.sin(((certificate.startOffset + 90) / 180) * Math.PI) * orbitRadius,
+                                            Math.sin(((certificate.startOffset + 180) / 180) * Math.PI) * orbitRadius,
+                                            Math.sin(((certificate.startOffset + 270) / 180) * Math.PI) * orbitRadius,
+                                            Math.sin((certificate.startOffset / 180) * Math.PI) * orbitRadius,
+                                        ],
                                     }}
                                     transition={{
-                                        duration: 3,
+                                        duration: orbitDuration,
                                         repeat: Infinity,
-                                        ease: "easeInOut",
-                                        repeatType: "reverse"
+                                        ease: "linear"
                                     }}
-                                />
-
-                                {/* Certificate planet - main circle */}
-                                <div
-                                    className={`relative w-full h-full rounded-full bg-gradient-to-br ${certificate.color} flex items-center justify-center overflow-hidden p-2 z-10`}
-                                    style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))' }}
+                                    style={{
+                                        top: '50%',
+                                        left: '50%',
+                                        width: `${size}px`,
+                                        height: `${size}px`,
+                                        marginLeft: `-${size / 2}px`,
+                                        marginTop: `-${size / 2}px`,
+                                    }}
                                 >
-                                    {/* Certificate title with proper sizing */}
-                                    <div className="text-white font-bold">
-                                        {getTitleWithSizing(certificate.title, certificate.size)}
+                                    {/* Outer glow - using multiple layers for perfect circular glow */}
+                                    <div className="absolute inset-0 rounded-full opacity-40"
+                                        style={{
+                                            background: `radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)`,
+                                            transform: 'scale(1.4)',
+                                        }}
+                                    />
+
+                                    {/* Pulsing glow animation */}
+                                    <motion.div
+                                        className="absolute inset-0 rounded-full"
+                                        style={{
+                                            background: `radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%)`,
+                                        }}
+                                        animate={{
+                                            scale: [1.2, 1.5, 1.2],
+                                        }}
+                                        transition={{
+                                            duration: 3,
+                                            repeat: Infinity,
+                                            ease: "easeInOut",
+                                            repeatType: "reverse"
+                                        }}
+                                    />
+
+                                    {/* Certificate planet - main circle */}
+                                    <div
+                                        className={`relative w-full h-full rounded-full bg-gradient-to-br ${certificate.color} flex items-center justify-center overflow-hidden p-2 z-10`}
+                                        style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))' }}
+                                    >
+                                        {/* Certificate title with proper sizing */}
+                                        <div className="text-white font-bold">
+                                            {getTitleWithSizing(certificate.title, certificate.size)}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
+                                </motion.div>
+                            );
+                        })}
+                    </motion.div>
+                )}
 
                 {/* Instructions text */}
                 <motion.p
