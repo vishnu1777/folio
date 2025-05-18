@@ -6,7 +6,7 @@ export async function GET() {
     try {
         const certificates = await prisma.certificate.findMany({
             orderBy: {
-                date: 'desc', // Order by date, newest first
+                date: 'desc', // Most recent first
             },
         });
 
@@ -14,10 +14,7 @@ export async function GET() {
     } catch (error) {
         console.error('Error fetching certificates:', error);
         return NextResponse.json(
-            {
-                error: 'Failed to fetch certificates',
-                details: error.message
-            },
+            { error: 'Failed to fetch certificates' },
             { status: 500 }
         );
     }
@@ -29,7 +26,7 @@ export async function POST(request) {
         const data = await request.json();
 
         // Validate required fields
-        const requiredFields = ['title', 'issuer', 'date', 'image', 'description'];
+        const requiredFields = ['title', 'issuer', 'date', 'image'];
         for (const field of requiredFields) {
             if (!data[field]) {
                 return NextResponse.json(
@@ -44,14 +41,9 @@ export async function POST(request) {
                 title: data.title,
                 issuer: data.issuer,
                 date: data.date,
+                description: data.description || '',
                 image: data.image,
-                link: data.link || '',
-                description: data.description,
-                color: data.color || 'from-blue-500 to-teal-300',
-                size: data.size || 'md',
-                orbitRadius: data.orbitRadius || 1.0,
-                orbitSpeed: data.orbitSpeed || 100,
-                startOffset: data.startOffset || 0,
+                credentialUrl: data.credentialUrl || '',
             },
         });
 

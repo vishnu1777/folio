@@ -1,39 +1,39 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 
-// GET a specific project by ID
+// GET a specific certificate by ID
 export async function GET(request, { params }) {
     try {
         const { id } = params;
-        const project = await prisma.project.findUnique({
+        const certificate = await prisma.certificate.findUnique({
             where: { id: Number(id) },
         });
 
-        if (!project) {
+        if (!certificate) {
             return NextResponse.json(
-                { error: 'Project not found' },
+                { error: 'Certificate not found' },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json(project, { status: 200 });
+        return NextResponse.json(certificate, { status: 200 });
     } catch (error) {
-        console.error('Error fetching project:', error);
+        console.error('Error fetching certificate:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch project' },
+            { error: 'Failed to fetch certificate' },
             { status: 500 }
         );
     }
 }
 
-// PUT/UPDATE a project
+// PUT/UPDATE a certificate
 export async function PUT(request, { params }) {
     try {
         const { id } = params;
         const data = await request.json();
 
         // Validate required fields
-        const requiredFields = ['title', 'description', 'tags', 'image', 'github', 'live', 'color'];
+        const requiredFields = ['title', 'issuer', 'date', 'image'];
         for (const field of requiredFields) {
             if (!data[field]) {
                 return NextResponse.json(
@@ -43,37 +43,44 @@ export async function PUT(request, { params }) {
             }
         }
 
-        const updatedProject = await prisma.project.update({
+        const updatedCertificate = await prisma.certificate.update({
             where: { id: Number(id) },
-            data
+            data: {
+                title: data.title,
+                issuer: data.issuer,
+                date: data.date,
+                description: data.description || '',
+                image: data.image,
+                credentialUrl: data.credentialUrl || '',
+            },
         });
 
-        return NextResponse.json(updatedProject, { status: 200 });
+        return NextResponse.json(updatedCertificate, { status: 200 });
     } catch (error) {
-        console.error('Error updating project:', error);
+        console.error('Error updating certificate:', error);
         return NextResponse.json(
-            { error: 'Failed to update project' },
+            { error: 'Failed to update certificate' },
             { status: 500 }
         );
     }
 }
 
-// DELETE a project
+// DELETE a certificate
 export async function DELETE(request, { params }) {
     try {
         const { id } = params;
-        await prisma.project.delete({
+        await prisma.certificate.delete({
             where: { id: Number(id) },
         });
 
         return NextResponse.json(
-            { message: 'Project deleted successfully' },
+            { message: 'Certificate deleted successfully' },
             { status: 200 }
         );
     } catch (error) {
-        console.error('Error deleting project:', error);
+        console.error('Error deleting certificate:', error);
         return NextResponse.json(
-            { error: 'Failed to delete project' },
+            { error: 'Failed to delete certificate' },
             { status: 500 }
         );
     }
