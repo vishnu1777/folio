@@ -410,13 +410,19 @@ const Skills = () => {
                                                 <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
                                                 {/* Skill logo */}
-                                                <div className="w-24 h-24 relative mb-2">
+                                                <div className="w-40 h-40 relative mb-2">
                                                     <Image
                                                         src={skill.image}
                                                         alt={skill.name}
                                                         fill
-                                                        className="object-contain"
+                                                        // sizes="(max-width: 768px) 56px, 96px" // Optimize loading
+                                                        className="object-contain p-2"
                                                         priority={index < 4}
+                                                        onError={(e) => {
+                                                            console.error(`Error loading image for ${skill.name}:`, skill.image);
+                                                            // Fallback to a placeholder if the image fails to load
+                                                            e.currentTarget.src = '/placeholder-skill.png';
+                                                        }}
                                                     />
                                                 </div>
 

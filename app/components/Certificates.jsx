@@ -428,15 +428,40 @@ export default function Certificates() {
                             <div className="p-4 md:p-6 space-y-4">
                                 {/* Certificate image */}
                                 <div className="relative w-full h-48 md:h-56 overflow-hidden rounded-lg border-2 border-pink-500/30">
-                                    {/* Placeholder for certificate image */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className={`text-5xl md:text-6xl mx-auto mb-2 bg-gradient-to-r ${activeCertificate.color} text-transparent bg-clip-text`}>
-                                                <FaGraduationCap />
+                                    {activeCertificate.image ? (
+                                        <div className="relative w-full h-full">
+                                            <img
+                                                src={activeCertificate.image}
+                                                alt={`${activeCertificate.title} certificate`}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.style.display = 'none';
+                                                    e.target.parentNode.querySelector('.fallback-image').style.display = 'flex';
+                                                }}
+                                            />
+                                            {/* Fallback in case image fails to load */}
+                                            <div
+                                                className="fallback-image absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center hidden"
+                                            >
+                                                <div className="text-center">
+                                                    <div className={`text-5xl md:text-6xl mx-auto mb-2 bg-gradient-to-r ${activeCertificate.color} text-transparent bg-clip-text`}>
+                                                        <FaGraduationCap />
+                                                    </div>
+                                                    <p className="text-gray-300 text-sm">Certificate Preview</p>
+                                                </div>
                                             </div>
-                                            <p className="text-gray-300 text-sm">Certificate Preview</p>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                                            <div className="text-center">
+                                                <div className={`text-5xl md:text-6xl mx-auto mb-2 bg-gradient-to-r ${activeCertificate.color} text-transparent bg-clip-text`}>
+                                                    <FaGraduationCap />
+                                                </div>
+                                                <p className="text-gray-300 text-sm">Certificate Preview</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Certificate details */}
