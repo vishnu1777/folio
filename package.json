@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
-    "@auth/nextjs": "^0.0.0-380f8d56",
     "@prisma/client": "^6.8.2",
     "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-label": "^2.1.6",
