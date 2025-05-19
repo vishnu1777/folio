@@ -1,16 +1,17 @@
-'use client';
+'use client'; // Important: keep this at the very top
 
-import { useState } from 'react';
+import { useState } from 'react'; // Make sure you import useState
 import { signIn } from 'next-auth/react';
 import { Button } from '../../components/ui/button';
 import { FaGoogle } from 'react-icons/fa';
 import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  // Hooks must be called at the top level, not inside conditionals or loops
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
-  const errorDescription = searchParams.get('error_description');
+  const error = searchParams?.get('error');
+  const errorDescription = searchParams?.get('error_description');
 
   // Map error codes to user-friendly messages
   const errorMessages = {
@@ -18,17 +19,11 @@ export default function LoginPage() {
     Default: "An error occurred. Please try again.",
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
-    try {
-      await signIn('google', {
-        callbackUrl: '/dashboard',
-        redirect: true
-      });
-    } catch (err) {
-      console.error("Login error:", err);
-      setIsLoading(false);
-    }
+    signIn('google', {
+      callbackUrl: '/dashboard'
+    });
   };
 
   return (
