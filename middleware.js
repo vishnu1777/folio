@@ -1,19 +1,14 @@
-import { NextResponse } from 'next/server';
+import { getToken } from "next-auth/jwt";
+import { NextResponse } from "next/server";
 
-export function middleware(request) {
-    // Only redirect requests to the homepage
-    if (request.nextUrl.pathname === '/') {
-        // Check if this is the first visit by looking for a cookie
-        const hasVisited = request.cookies.get('has_visited');
+export async function middleware(req) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const isAuthenticated = !!token;
 
-        if (!hasVisited) {
-            // Set a cookie to track that the user has visited
-            const response = NextResponse.redirect(new URL('/loading-page', request.url));
-            response.cookies.set('has_visited', 'true', {
-                maxAge: 60 * 60, // 1 hour
-                path: '/',
-            });
-            return response;
+    // Check if the request is for the dashboard path
+    if (req.nextUrl.pathname.startsWith("/dashboard")) {
+        if (!isAuthenticated) {
+            return NextResponse.redirect(new URL("/login", req.url));
         }
     }
 
@@ -21,5 +16,5 @@ export function middleware(request) {
 }
 
 export const config = {
-    matcher: ['/'],
+    matcher: ["/dashboard/:path*"],
 };

@@ -1,51 +1,43 @@
-'use client';
+// 'use client';
 
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import CredentialsProvider from 'next-auth/providers/credentials';
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
-export const authOptions = {
+// Create the NextAuth configuration and handler with increased timeouts
+const handler = NextAuth({
+  debug: true, // Keep debug enabled
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
-        password: { label: "Password", type: "password" }
+      // Add the following options to increase timeouts
+      httpOptions: {
+        timeout: 10000, // Increase timeout to 10 seconds (from default 3.5s)
       },
-      async authorize(credentials) {
-        // Add logic here to look up the user from the credentials supplied
-        const user = { id: 1, name: 'John Smith', email: 'jsmith@example.com' }; // Example user
-
-        if (user) {
-          return user;
-        } else {
-          return null;
-        }
-      }
-    })
+    }),
   ],
-  pages: {
-    signIn: '/login',  // Redirect to login page if not authenticated
-  },
-  session: {
-    strategy: 'jwt',
-  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.user.id = token.id;
-      return session;
-    }
-  }
-};
+    async signIn({ user }) {
+      // Simplified email checking
+      const allowedEmails = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
+      const isAllowed = allowedEmails.includes(user.email);
 
-export default NextAuth(authOptions);
+      console.log("Auth attempt:", {
+        email: user.email,
+        isAllowed: isAllowed
+      });
+
+      return isAllowed;
+    },
+    async session({ session }) {
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
+});
+
+// Export the handler methods
+export { handler as GET, handler as POST };

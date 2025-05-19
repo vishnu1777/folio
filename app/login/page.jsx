@@ -2,51 +2,67 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { FaGoogle } from 'react-icons/fa';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  const errorDescription = searchParams.get('error_description');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
+  // Map error codes to user-friendly messages
+  const errorMessages = {
+    AccessDenied: "You don't have permission to access this page. Only authorized emails can log in.",
+    Default: "An error occurred. Please try again.",
+  };
 
-    if (result.error) {
-      setError(result.error);
-    } else {
-      // Redirect to dashboard or home page after successful login
-      window.location.href = '/dashboard';
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signIn('google', {
+        callbackUrl: '/dashboard',
+        redirect: true
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleSubmit} className="w-full max-w-sm">
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit" className="mt-4">Login</Button>
-      </form>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Dashboard Login</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Sign in to access your portfolio dashboard
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800">
+            <p><strong>Error:</strong> {errorMessages[error] || error}</p>
+            {errorDescription && <p><strong>Details:</strong> {errorDescription}</p>}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <Button
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-2"
+            disabled={isLoading}
+          >
+            <FaGoogle />
+            {isLoading ? 'Signing in...' : 'Sign in with Google'}
+          </Button>
+
+          <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+            Only authorized emails can access the dashboard
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
