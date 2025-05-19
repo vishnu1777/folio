@@ -223,7 +223,7 @@ const Skills = () => {
                                     {skills.map((skill, index) => (
                                         <motion.div
                                             key={`mobile-${skill.name}`}
-                                            className="relative flex justify-center"
+                                            className="relative flex justify-center "
                                             initial={{ y: -100, opacity: 0, scale: 0.8 }}
                                             animate={animationsReady ? {
                                                 y: 0,
@@ -244,21 +244,22 @@ const Skills = () => {
                                                 onClick={() => handleSkillExplode(index)}
                                             >
                                                 {/* Bomb fuse - ONLY AT THE TOP - purple/pink theme */}
-                                                <div className="absolute -top-3 left-1/2 w-1 h-6 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
+                                                <div className="absolute  -top-3 left-1/2 w-1 h-6 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
                                                 {/* Skill logo */}
-                                                <div className="w-14 h-14 relative">
+                                                <div className=" rounded-full w-24 h-24  flex flex-col items-center justify-center relative">
                                                     <Image
                                                         src={skill.image}
                                                         alt={skill.name}
-                                                        fill
-                                                        className="object-contain"
+                                                        height={96}
+                                                        width={96}
+                                                        className="rounded-full w-full h-full object-cover"
                                                         priority={index < 4}
                                                     />
                                                 </div>
 
                                                 {/* Skill name */}
-                                                <p className="text-white text-xs font-medium text-center mt-2">{skill.name}</p>
+                                                {/* <p className="text-white text-xs font-medium text-center mt-2">{skill.name}</p> */}
 
                                                 {/* Spark animation ONLY at top - with pink theme */}
                                                 <motion.div
@@ -372,7 +373,7 @@ const Skills = () => {
                                     {skills.map((skill, index) => (
                                         <motion.div
                                             key={`desktop-${skill.name}`}
-                                            className="relative flex justify-center"
+                                            className="relative flex justify-center "
                                             initial={{
                                                 x: -300,
                                                 y: 100,
@@ -401,7 +402,7 @@ const Skills = () => {
                                             }}
                                         >
                                             <motion.div
-                                                className={`relative w-40 h-40 rounded-full border-4 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
+                                                className={`relative w-40 h-40 flex-col items-center justify-center rounded-full border-4 ${explodedSkill === index ? 'border-pink-500' : 'border-gray-700'} shadow-lg flex flex-col items-center justify-center overflow-hidden ${explodedSkill === index ? 'bg-gradient-to-b from-purple-900 to-gray-900' : 'bg-gradient-to-b from-gray-800 to-gray-900'}`}
                                                 onMouseEnter={() => setHoveredSkill(index)}
                                                 onMouseLeave={() => setHoveredSkill(null)}
                                                 onClick={() => handleSkillExplode(index)}
@@ -410,13 +411,14 @@ const Skills = () => {
                                                 <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
                                                 {/* Skill logo */}
-                                                <div className="w-40 h-40 relative mb-2">
+                                                <div className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center mb-2">
                                                     <Image
                                                         src={skill.image}
                                                         alt={skill.name}
-                                                        fill
+                                                        height={100}
+                                                        width={100}
                                                         // sizes="(max-width: 768px) 56px, 96px" // Optimize loading
-                                                        className="object-contain p-2"
+                                                        className="rounded-full w-full h-full object-cover"
                                                         priority={index < 4}
                                                         onError={(e) => {
                                                             console.error(`Error loading image for ${skill.name}:`, skill.image);
@@ -427,7 +429,7 @@ const Skills = () => {
                                                 </div>
 
                                                 {/* Skill name */}
-                                                <p className="text-white text-lg font-medium text-center">{skill.name}</p>
+                                                {/* <p className="text-white text-lg font-medium text-center">{skill.name}</p> */}
 
                                                 {/* Spark animation ONLY at top */}
                                                 <motion.div
