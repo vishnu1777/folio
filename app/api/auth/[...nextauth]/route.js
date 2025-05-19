@@ -5,7 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 
 // Create the NextAuth configuration and handler with increased timeouts
 const handler = NextAuth({
-  debug: true, // Keep debug enabled
+  // debug: true, // Keep debug enabled
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,

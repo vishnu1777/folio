@@ -1,5 +1,5 @@
 'use client';
-
+import React from "react"; // Add this import
 import { toast } from "sonner";
 import { CheckCircle, XCircle, AlertCircle, Info } from "lucide-react";
 

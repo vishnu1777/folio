@@ -1,5 +1,5 @@
 'use client'; // Important: keep this at the very top
-
+import React from "react"; // Add this import
 import { useState } from 'react'; // Make sure you import useState
 import { signIn } from 'next-auth/react';
 import { Button } from '../../components/ui/button';

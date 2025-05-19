@@ -2,7 +2,15 @@
 const nextConfig = {
     // Mark login page as client-side rendered to avoid prerendering issues
     output: 'standalone',
-
+    pageExtensions: [
+        "page.jsx",
+        "page.js",
+        // FIXME: Next.js has a bug which does not resolve not-found.page.tsx correctly
+        // Instead, use `not-found.ts` as a workaround
+        // "ts" is required to resolve `not-found.ts`
+        // https://github.com/vercel/next.js/issues/65447
+        "js"
+    ],
     // Moved from experimental to root level per Next.js warning
     serverExternalPackages: ['next-auth'],
 

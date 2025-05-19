@@ -1,5 +1,5 @@
 'use client';
-
+import React from "react"; // Add this import
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingAnimation from '../components/LoadingAnimation';

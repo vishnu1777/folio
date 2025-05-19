@@ -1,5 +1,5 @@
 'use client';
-
+import React from "react"; // Add this import
 import { useState, useEffect } from 'react';
 import LoadingAnimation from './components/LoadingAnimation';
 import Hero from './components/Hero';
@@ -8,7 +8,7 @@ import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Certificates from './components/Certificates';
-
+// export const dynamic = 'force-dynamic'
 export default function Home() {
   const [loading, setLoading] = useState(true);
 
