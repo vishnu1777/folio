@@ -1,12 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '../../../components/ui/button';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
+import { useToastCrud } from "@/app/hooks/use-toast-crud";
+import { Toaster } from "sonner";
 import DeleteDialog from './delete-dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Pencil,
+    Trash2,
+    Award,
+    Calendar,
+    Building,
+    ExternalLink,
+    Image as ImageIcon
+} from 'lucide-react';
 
 export default function CertificatesManager() {
     const [certificates, setCertificates] = useState([]);
@@ -15,6 +26,7 @@ export default function CertificatesManager() {
     const [selectedCertificate, setSelectedCertificate] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [certificateToDelete, setCertificateToDelete] = useState(null);
+    const { toastCreate, toastUpdate, toastDelete, toastError, toastInfo, toastWarning } = useToastCrud();
 
     // Form state
     const [formData, setFormData] = useState({
@@ -23,25 +35,31 @@ export default function CertificatesManager() {
         date: '',
         description: '',
         image: '',
-        credentialUrl: '',
+        link: '',
     });
 
     // Fetch certificates
     useEffect(() => {
-        async function fetchCertificates() {
+        const fetchCertificates = async () => {
             try {
                 setIsLoading(true);
-                const res = await fetch('/api/certificates');
-                if (!res.ok) throw new Error('Failed to fetch certificates');
+                const response = await fetch('/api/certificates');
 
-                const data = await res.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Fetched certificates:', data);
                 setCertificates(data);
+                toastInfo('Certificates loaded', `${data.length} certificates retrieved successfully`);
             } catch (error) {
-                console.error('Error loading certificates:', error);
+                console.error('Error fetching certificates:', error);
+                toastError('Failed to load certificates', 'Please try again later or contact support.');
             } finally {
                 setIsLoading(false);
             }
-        }
+        };
 
         fetchCertificates();
     }, []);
@@ -57,15 +75,37 @@ export default function CertificatesManager() {
         e.preventDefault();
 
         try {
-            const res = await fetch('/api/certificates', {
+            // Input validation
+            if (!formData.title.trim()) {
+                toastError('Validation Error', 'Certificate title is required');
+                return;
+            }
+
+            if (!formData.issuer.trim()) {
+                toastError('Validation Error', 'Issuing organization is required');
+                return;
+            }
+
+            if (!formData.date.trim()) {
+                toastError('Validation Error', 'Issue date is required');
+                return;
+            }
+
+            if (!formData.image.trim()) {
+                toastWarning('No Image', 'Certificate will be created without an image');
+            }
+
+            const response = await fetch('/api/certificates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
 
-            if (!res.ok) throw new Error('Failed to create certificate');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
 
-            const newCertificate = await res.json();
+            const newCertificate = await response.json();
             setCertificates(prev => [...prev, newCertificate]);
 
             // Reset form
@@ -75,10 +115,13 @@ export default function CertificatesManager() {
                 date: '',
                 description: '',
                 image: '',
-                credentialUrl: '',
+                link: '',
             });
+
+            toastCreate('Certificate created', `"${formData.title}" has been added to your portfolio.`);
         } catch (error) {
             console.error('Error creating certificate:', error);
+            toastError('Failed to create certificate', 'Please check your inputs and try again.');
         }
     };
 
@@ -90,68 +133,71 @@ export default function CertificatesManager() {
             issuer: certificate.issuer,
             date: certificate.date,
             description: certificate.description || '',
-            image: certificate.image,
-            credentialUrl: certificate.credentialUrl || '',
+            image: certificate.image || '',
+            link: certificate.link || '',
         });
         setIsEditing(true);
+        toastInfo('Edit mode', `Editing "${certificate.title}"`);
     };
 
     // Update certificate
     const handleUpdate = async (e) => {
         e.preventDefault();
+
         if (!selectedCertificate) return;
 
         try {
-            const res = await fetch(`/api/certificates/${selectedCertificate.id}`, {
+            // Input validation
+            if (!formData.title.trim()) {
+                toastError('Validation Error', 'Certificate title is required');
+                return;
+            }
+
+            if (!formData.issuer.trim()) {
+                toastError('Validation Error', 'Issuing organization is required');
+                return;
+            }
+
+            if (!formData.date.trim()) {
+                toastError('Validation Error', 'Issue date is required');
+                return;
+            }
+
+            const response = await fetch(`/api/certificates/${selectedCertificate.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
 
-            if (!res.ok) throw new Error('Failed to update certificate');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
 
-            const updatedCertificate = await res.json();
+            const updatedCertificate = await response.json();
+
+            // Update certificates array
             setCertificates(prev =>
-                prev.map(cert =>
-                    cert.id === updatedCertificate.id ? updatedCertificate : cert
-                )
+                prev.map(cert => cert.id === updatedCertificate.id ? updatedCertificate : cert)
             );
 
-            // Reset form and editing state
+            // Reset edit mode
+            setIsEditing(false);
+            setSelectedCertificate(null);
+
+            // Reset form
             setFormData({
                 title: '',
                 issuer: '',
                 date: '',
                 description: '',
                 image: '',
-                credentialUrl: '',
+                link: '',
             });
-            setIsEditing(false);
-            setSelectedCertificate(null);
+
+            toastUpdate('Certificate updated', `"${formData.title}" has been updated successfully.`);
         } catch (error) {
             console.error('Error updating certificate:', error);
-        }
-    };
-
-    // Delete certificate
-    const handleDelete = async () => {
-        if (!certificateToDelete) return;
-
-        try {
-            const res = await fetch(`/api/certificates/${certificateToDelete.id}`, {
-                method: 'DELETE'
-            });
-
-            if (!res.ok) throw new Error('Failed to delete certificate');
-
-            setCertificates(prev =>
-                prev.filter(cert => cert.id !== certificateToDelete.id)
-            );
-
-            setDeleteDialogOpen(false);
-            setCertificateToDelete(null);
-        } catch (error) {
-            console.error('Error deleting certificate:', error);
+            toastError('Failed to update certificate', 'Please check your connection and try again.');
         }
     };
 
@@ -165,158 +211,270 @@ export default function CertificatesManager() {
             date: '',
             description: '',
             image: '',
-            credentialUrl: '',
+            link: '',
         });
+        toastInfo('Edit cancelled', 'No changes were made');
     };
 
+    // Show delete confirmation
+    const confirmDelete = (certificate) => {
+        setCertificateToDelete(certificate);
+        setDeleteDialogOpen(true);
+    };
+
+    // Delete certificate
+    const handleDelete = async () => {
+        if (!certificateToDelete) return;
+
+        try {
+            const response = await fetch(`/api/certificates/${certificateToDelete.id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            // Remove certificate from state
+            setCertificates(prev =>
+                prev.filter(cert => cert.id !== certificateToDelete.id)
+            );
+
+            // Close dialog and reset
+            setDeleteDialogOpen(false);
+            setCertificateToDelete(null);
+
+            toastDelete('Certificate deleted', `"${certificateToDelete.title}" has been removed from your portfolio.`);
+        } catch (error) {
+            console.error('Error deleting certificate:', error);
+            toastError('Delete failed', 'Unable to delete the certificate. Please try again.');
+        }
+    };
+
+    // Loading state
     if (isLoading) {
-        return <div className="flex justify-center p-8">Loading certificates...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+                <div className="w-16 h-16 border-4 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                <p className="text-lg text-gray-600">Loading certificates...</p>
+            </div>
+        );
     }
 
     return (
-        <div className="space-y-8">
-            <Card>
-                <CardContent className="p-6">
-                    <h2 className="text-xl font-bold mb-4">
-                        {isEditing ? 'Edit Certificate' : 'Add New Certificate'}
-                    </h2>
+        <div className="container mx-auto p-4">
+            {/* Sonner Toaster Component */}
+            <Toaster position="top-right" richColors closeButton />
 
-                    <form onSubmit={isEditing ? handleUpdate : handleCreate} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Certificate Title</Label>
+            <h1 className="text-2xl font-bold mb-6">
+                {isEditing ? 'Edit Certificate' : 'Create New Certificate'}
+            </h1>
+
+            {/* Certificate Form */}
+            <form onSubmit={isEditing ? handleUpdate : handleCreate} className="mb-8 space-y-4 p-4 border rounded-lg shadow-sm bg-white dark:bg-gray-800">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="title" className="mb-1">Certificate Title*</Label>
+                        <div className="flex items-center relative">
+                            <Award className="absolute left-2 h-4 w-4 text-gray-500" />
                             <Input
                                 id="title"
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
+                                placeholder="Certificate title"
+                                className="pl-8"
                                 required
                             />
                         </div>
+                    </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="issuer">Issuing Organization</Label>
+                    <div>
+                        <Label htmlFor="issuer" className="mb-1">Issuing Organization*</Label>
+                        <div className="flex items-center relative">
+                            <Building className="absolute left-2 h-4 w-4 text-gray-500" />
                             <Input
                                 id="issuer"
                                 name="issuer"
                                 value={formData.issuer}
                                 onChange={handleChange}
+                                placeholder="Organization name"
+                                className="pl-8"
                                 required
                             />
                         </div>
+                    </div>
+                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="date">Issue Date</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="date" className="mb-1">Issue Date*</Label>
+                        <div className="flex items-center relative">
+                            <Calendar className="absolute left-2 h-4 w-4 text-gray-500" />
                             <Input
                                 id="date"
                                 name="date"
                                 type="date"
                                 value={formData.date}
                                 onChange={handleChange}
+                                className="pl-8"
                                 required
                             />
                         </div>
+                    </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows={3}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="image">Certificate Image URL</Label>
+                    <div>
+                        <Label htmlFor="link" className="mb-1">Verification URL</Label>
+                        <div className="flex items-center relative">
+                            <ExternalLink className="absolute left-2 h-4 w-4 text-gray-500" />
                             <Input
-                                id="image"
-                                name="image"
-                                value={formData.image}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="credentialUrl">Verification URL</Label>
-                            <Input
-                                id="credentialUrl"
-                                name="credentialUrl"
-                                value={formData.credentialUrl}
+                                id="link"
+                                name="link"
+                                value={formData.link}
                                 onChange={handleChange}
                                 placeholder="URL to verify the certificate"
+                                className="pl-8"
                             />
                         </div>
+                    </div>
+                </div>
 
-                        <div className="flex gap-2 pt-2">
-                            <Button type="submit">
-                                {isEditing ? 'Update Certificate' : 'Add Certificate'}
-                            </Button>
-                            {isEditing && (
-                                <Button type="button" variant="outline" onClick={handleCancel}>
-                                    Cancel
-                                </Button>
-                            )}
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+                <div>
+                    <Label htmlFor="description" className="mb-1">Description</Label>
+                    <Textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="Brief description of the certificate and what you learned"
+                        rows={3}
+                    />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {certificates.map((cert) => (
-                    <Card key={cert.id} className="overflow-hidden">
-                        <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
-                            <img
-                                src={cert.image}
-                                alt={cert.title}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+                <div>
+                    <Label htmlFor="image" className="mb-1">Certificate Image URL*</Label>
+                    <div className="flex items-center relative">
+                        <ImageIcon className="absolute left-2 h-4 w-4 text-gray-500" />
+                        <Input
+                            id="image"
+                            name="image"
+                            value={formData.image}
+                            onChange={handleChange}
+                            placeholder="https://example.com/certificate.jpg"
+                            className="pl-8"
+                            required
+                        />
+                    </div>
+                </div>
 
-                        <CardContent className="p-4">
-                            <h3 className="font-bold">{cert.title}</h3>
-                            <p className="text-sm text-gray-600">{cert.issuer}</p>
-                            <p className="text-xs text-gray-500 mt-1">{cert.date}</p>
+                <div className="flex justify-end gap-2 pt-4">
+                    {isEditing && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCancel}
+                        >
+                            Cancel
+                        </Button>
+                    )}
 
-                            {cert.description && (
-                                <p className="text-sm mt-2 line-clamp-2">{cert.description}</p>
-                            )}
+                    <Button type="submit">
+                        {isEditing ? 'Update Certificate' : 'Create Certificate'}
+                    </Button>
+                </div>
+            </form>
 
-                            <div className="flex justify-between items-center mt-4">
-                                {cert.credentialUrl && (
-                                    <Button size="sm" variant="outline" asChild>
-                                        <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer">
-                                            Verify
-                                        </a>
-                                    </Button>
+            {/* Certificates List */}
+            <h2 className="text-xl font-bold mb-4">Certificates</h2>
+
+            {certificates.length === 0 ? (
+                <div className="text-center p-8 border rounded-lg">
+                    <p className="text-gray-500">No certificates found. Add your first certificate!</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {certificates.map((cert) => (
+                        <Card key={cert.id} className="overflow-hidden">
+                            <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+                                <img
+                                    src={cert.image}
+                                    alt={cert.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/placeholder-certificate.png';
+                                    }}
+                                />
+                            </div>
+
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h3 className="font-bold text-lg">{cert.title}</h3>
+                                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                                            <Building className="h-3 w-3" /> {cert.issuer}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                            <Calendar className="h-3 w-3" /> {cert.date}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex space-x-1">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => handleEdit(cert)}
+                                            title="Edit"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => confirmDelete(cert)}
+                                            className="text-red-500 hover:text-red-700"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {cert.description && (
+                                    <p className="text-sm mt-2 line-clamp-3 text-gray-700 dark:text-gray-300">
+                                        {cert.description}
+                                    </p>
                                 )}
 
-                                <div className="flex gap-2">
-                                    <Button size="sm" variant="ghost" onClick={() => handleEdit(cert)}>
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => {
-                                            setCertificateToDelete(cert);
-                                            setDeleteDialogOpen(true);
-                                        }}
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                                {cert.link && (
+                                    <div className="mt-4">
+                                        <Button size="sm" variant="outline" className="w-full" asChild>
+                                            <a
+                                                href={cert.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-1"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                                Verify Certificate
+                                            </a>
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
 
+            {/* Delete Confirmation Dialog */}
             <DeleteDialog
                 isOpen={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
                 onDelete={handleDelete}
+                title="Delete Certificate"
+                description={`Are you sure you want to delete "${certificateToDelete?.title}"? This action cannot be undone.`}
             />
         </div>
     );

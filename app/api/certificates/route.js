@@ -43,7 +43,7 @@ export async function POST(request) {
                 date: data.date,
                 description: data.description || '',
                 image: data.image,
-                credentialUrl: data.credentialUrl || '',
+                link: data.link || '',
             },
         });
 
