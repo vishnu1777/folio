@@ -1,6 +1,7 @@
+// This file should NOT have 'use client'
 import { Geist, Geist_Mono } from "next/font/google";
-import { NextAuthProvider } from "./providers";
 import "./globals.css";
+import ClientProviders from "./components/ClientProviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,9 +22,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <NextAuthProvider>
+        <ClientProviders>
           {children}
-        </NextAuthProvider>
+        </ClientProviders>
       </body>
     </html>
   );
