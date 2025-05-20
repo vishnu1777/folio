@@ -96,8 +96,7 @@ export default function Contact() {
             const templateParams = {
                 from_name: formState.name,
                 from_email: formState.email,
-                subject: `New message from ${formState.name
-                    }`,
+                subject: `New message from ${formState.name}`,
                 message: formState.message,
                 to_name: "Sahithya", // Your name here
             };
@@ -468,16 +467,16 @@ export default function Contact() {
 
                         <div className="space-y-4">
                             <a href="mailto:sahithyad42@gmail.com" className="flex items-center justify-center md:justify-start space-x-3 text-gray-200 hover:text-pink-400 transition duration-300">
-                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0">
                                     <FaEnvelope className="text-pink-400" />
                                 </div>
-                                <span>sahithyad42@gmail.com</span>
+                                <span className="text-sm md:text-base break-all md:break-normal">sahithyad42@gmail.com</span>
                             </a>
                             <a href="tel:+91-6361709090" className="flex items-center justify-center md:justify-start space-x-3 text-gray-200 hover:text-pink-400 transition duration-300">
-                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0">
                                     <FaPhone className="text-pink-400" />
                                 </div>
-                                <span>+91 6361709090</span>
+                                <span className="text-sm mr-10 md:text-base">+91 6361709090</span>
                             </a>
                         </div>
                     </motion.div>
