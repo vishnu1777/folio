@@ -6,6 +6,32 @@ import { useInView } from 'react-intersection-observer';
 import { useMediaQuery } from 'react-responsive';
 import { FaPhone, FaEnvelope, FaPaperPlane, FaTimes } from 'react-icons/fa';
 
+// Load EmailJS script
+const loadEmailJS = async () => {
+    return new Promise((resolve, reject) => {
+        // Check if EmailJS is already loaded
+        if (window.emailjs) {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js";
+        script.async = true;
+        document.body.appendChild(script);
+
+        script.onload = () => {
+            // Initialize with public key
+            window.emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
+            resolve();
+        };
+
+        script.onerror = () => {
+            reject(new Error('Failed to load EmailJS'));
+        };
+    });
+};
+
 export default function Contact() {
     // Responsive layout hooks
     const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -23,8 +49,16 @@ export default function Contact() {
     });
     const [phoneState, setPhoneState] = useState('locked');
     const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('Message sent successfully!');
+    const [notificationType, setNotificationType] = useState('success');
     const [formSubmitted, setFormSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const nameInputRef = useRef(null);
+
+    // Load EmailJS on component mount
+    useEffect(() => {
+        loadEmailJS().catch(error => console.error("Failed to load EmailJS:", error));
+    }, []);
 
     // Handle phone state changes
     useEffect(() => {
@@ -48,32 +82,67 @@ export default function Contact() {
     };
 
     // Handle form submission
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        // Show floating notification
-        setShowNotification(true);
+        try {
+            // Set calling state
+            setPhoneState('calling');
 
-        // Hide notification after 3 seconds
-        setTimeout(() => {
-            setShowNotification(false);
-        }, 3000);
+            // Send email using EmailJS
+            await loadEmailJS(); // Ensure EmailJS is loaded
 
-        // Transition to "call ended" state
-        setPhoneState('calling');
-        setTimeout(() => {
-            setFormSubmitted(true);
-            setPhoneState('call-ended');
-        }, 1500);
+            const templateParams = {
+                from_name: formState.name,
+                from_email: formState.email,
+                subject: `New message from ${formState.name
+                    }`,
+                message: formState.message,
+                to_name: "Sahithya", // Your name here
+            };
 
-        // Reset after 5 seconds
-        setTimeout(() => {
-            setFormState({ name: '', email: '', message: '' });
-            setFormSubmitted(false);
-            setPhoneState('unlocked');
-        }, 5000);
+            await window.emailjs.send(
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+                templateParams
+            );
 
-        // Here you would typically send the form data to your backend
+            // Show success notification
+            setNotificationType('success');
+            setNotificationMessage('Message sent successfully!');
+            setShowNotification(true);
+
+            // Transition to "call ended" state
+            setTimeout(() => {
+                setFormSubmitted(true);
+                setPhoneState('call-ended');
+            }, 1500);
+
+            // Reset after 5 seconds
+            setTimeout(() => {
+                setFormState({ name: '', email: '', message: '' });
+                setFormSubmitted(false);
+                setPhoneState('unlocked');
+                setShowNotification(false);
+            }, 5000);
+
+        } catch (error) {
+            console.error("Failed to send email:", error);
+
+            // Show error notification
+            setNotificationType('error');
+            setNotificationMessage('Failed to send message. Please try again.');
+            setShowNotification(true);
+
+            // Reset to form state
+            setTimeout(() => {
+                setPhoneState('unlocked');
+                setShowNotification(false);
+            }, 3000);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Reset to form view
@@ -221,6 +290,7 @@ export default function Contact() {
                                 placeholder="Your Name"
                                 className="w-full bg-gray-800/70 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                                 required
+                                disabled={isSubmitting}
                             />
                         </div>
 
@@ -233,6 +303,7 @@ export default function Contact() {
                                 placeholder="Your Email"
                                 className="w-full bg-gray-800/70 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                                 required
+                                disabled={isSubmitting}
                             />
                         </div>
 
@@ -244,6 +315,7 @@ export default function Contact() {
                                 placeholder="Your Message"
                                 className="w-full h-full min-h-[100px] bg-gray-800/70 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 resize-none"
                                 required
+                                disabled={isSubmitting}
                             />
                         </div>
 
@@ -252,6 +324,7 @@ export default function Contact() {
                             className="mt-2 py-3 px-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            disabled={isSubmitting}
                         >
                             <span>Send Message</span>
                             <FaPaperPlane className="ml-2" />
@@ -333,15 +406,17 @@ export default function Contact() {
         <AnimatePresence>
             {showNotification && (
                 <motion.div
-                    className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-full shadow-lg border border-white/20"
+                    className={`absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-full shadow-lg border ${notificationType === 'success' ? 'border-green-400/20' : 'border-red-400/20'
+                        }`}
                     variants={notificationVariants}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
                 >
                     <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        <span className="text-white text-xs font-medium">Message sent successfully!</span>
+                        <div className={`w-2 h-2 rounded-full ${notificationType === 'success' ? 'bg-green-400' : 'bg-red-400'
+                            } animate-pulse`} />
+                        <span className="text-white text-xs font-medium">{notificationMessage}</span>
                     </div>
                 </motion.div>
             )}
@@ -378,153 +453,61 @@ export default function Contact() {
                     </motion.p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
-                    {/* Contact Info Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+                    {/* Contact Info */}
                     <motion.div
-                        className="w-full lg:w-1/2 max-w-md"
                         initial={{ opacity: 0, x: -50 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.7, delay: 0.2 }}
+                        transition={{ duration: 0.7, delay: 0.3 }}
+                        className="text-center md:text-left"
                     >
-                        <div className="bg-gray-900/40 backdrop-blur-sm rounded-xl p-6 border border-pink-500/10 shadow-xl">
-                            <h3 className="text-2xl text-white font-bold mb-6">Let's Connect</h3>
+                        <h3 className="text-2xl md:text-3xl font-semibold text-white mb-6">Let's Connect</h3>
+                        <p className="text-gray-300 mb-8 max-w-md mx-auto md:mx-0">
+                            I'm always open to discussing new projects, creative ideas or opportunities to be part of your vision.
+                        </p>
 
-                            <div className="space-y-6">
-                                <div className="flex items-center">
-                                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mr-4">
-                                        <FaEnvelope className="text-pink-400 text-xl" />
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-400 text-sm">Email</p>
-                                        <a href="mailto:sahithyapadival@gmail.com" className="text-white hover:text-pink-400 transition-colors">
-                                            sahithyapadival@gmail.com
-                                        </a>
-                                    </div>
+                        <div className="space-y-4">
+                            <a href="mailto:sahithyad42@gmail.com" className="flex items-center justify-center md:justify-start space-x-3 text-gray-200 hover:text-pink-400 transition duration-300">
+                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                    <FaEnvelope className="text-pink-400" />
                                 </div>
-
-                                <div className="flex items-center">
-                                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mr-4">
-                                        <FaPhone className="text-pink-400 text-xl" />
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-400 text-sm">Phone</p>
-                                        <a href="tel:+91 6361709090" className="text-white hover:text-pink-400 transition-colors">
-                                            +91 6361709090
-                                        </a>
-                                    </div>
+                                <span>sahithyad42@gmail.com</span>
+                            </a>
+                            <a href="tel:+91-6361709090" className="flex items-center justify-center md:justify-start space-x-3 text-gray-200 hover:text-pink-400 transition duration-300">
+                                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                    <FaPhone className="text-pink-400" />
                                 </div>
-
-                                {/* Decorative elements */}
-                                <div className="relative h-12">
-                                    <motion.div
-                                        className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-pink-500/50 to-transparent"
-                                        animate={{
-                                            scaleX: [1, 1.2, 1],
-                                            opacity: [0.5, 0.8, 0.5]
-                                        }}
-                                        transition={{
-                                            duration: 4,
-                                            repeat: Infinity,
-                                            repeatType: "reverse"
-                                        }}
-                                    />
-
-                                    <div className="flex justify-center mt-6">
-                                        {[...Array(5)].map((_, i) => (
-                                            <motion.div
-                                                key={i}
-                                                className="w-1 h-1 rounded-full bg-pink-500 mx-1"
-                                                animate={{
-                                                    height: [1, 8, 1],
-                                                    opacity: [0.3, 1, 0.3]
-                                                }}
-                                                transition={{
-                                                    duration: 1.5,
-                                                    delay: i * 0.2,
-                                                    repeat: Infinity
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                                <span>+91 6361709090</span>
+                            </a>
                         </div>
                     </motion.div>
 
-                    {/* Phone Component */}
-                    <motion.div
-                        ref={ref}
-                        className="w-full lg:w-1/2 max-w-[300px] h-[580px] relative perspective-[1000px]"
-                        variants={phoneVariants}
-                        initial="hidden"
-                        animate={controls}
-                    >
-                        {/* Phone Frame */}
-                        <div className="absolute inset-0 rounded-[40px] bg-gradient-to-b from-gray-800 to-gray-900 p-2 shadow-2xl transform-style-3d">
-                            {/* Phone notch */}
-                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-6 bg-black rounded-b-xl z-10 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-gray-600 mr-3" />
-                                <div className="w-2 h-2 rounded-full bg-gray-600" />
-                            </div>
+                    {/* Phone UI */}
+                    <div className="flex justify-center">
+                        <motion.div
+                            ref={ref}
+                            variants={phoneVariants}
+                            initial="hidden"
+                            animate={controls}
+                            className="w-full max-w-[280px] h-[550px] bg-gray-900 rounded-[40px] overflow-hidden shadow-2xl border border-gray-800 relative"
+                            style={{
+                                boxShadow: '0 25px 50px -12px rgba(31, 0, 51, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 40px rgba(192, 132, 252, 0.1) inset',
+                            }}
+                        >
+                            {/* Phone Notch */}
+                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-36 h-6 bg-black rounded-b-2xl z-10"></div>
 
-                            {/* Phone screen */}
-                            <div className={`h-full w-full rounded-[32px] overflow-hidden bg-gradient-to-b from-gray-900 to-black border-4 ${phoneState === 'locked' ? 'border-gray-800' : 'border-pink-900/30'} relative`}>
-                                {/* Screen background effects */}
-                                <div className="absolute inset-0 overflow-hidden">
-                                    {/* Animated gradient background */}
-                                    <motion.div
-                                        className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-pink-900/20 to-blue-900/30"
-                                        animate={{
-                                            backgroundPosition: ['0% 0%', '100% 100%'],
-                                        }}
-                                        transition={{
-                                            duration: 15,
-                                            repeat: Infinity,
-                                            repeatType: "reverse"
-                                        }}
-                                        style={{ backgroundSize: '200% 200%' }}
-                                    />
-
-                                    {/* Floating particles */}
-                                    {[...Array(15)].map((_, i) => (
-                                        <motion.div
-                                            key={i}
-                                            className="absolute rounded-full bg-white/20"
-                                            style={{
-                                                left: `${Math.random() * 100}%`,
-                                                top: `${Math.random() * 100}%`,
-                                                width: `${1 + Math.random() * 3}px`,
-                                                height: `${1 + Math.random() * 3}px`,
-                                            }}
-                                            animate={{
-                                                y: [0, -15, 0],
-                                                opacity: [0, 0.7, 0],
-                                                scale: [0, 1, 0],
-                                            }}
-                                            transition={{
-                                                duration: 3 + Math.random() * 5,
-                                                repeat: Infinity,
-                                                delay: Math.random() * 5,
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-
-                                {/* Screen content */}
-                                <AnimatePresence mode="wait">
-                                    <div key={phoneState} className="relative z-10 h-full">
-                                        {renderPhoneScreen()}
-                                    </div>
+                            {/* Phone Screen */}
+                            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
+                                <AnimatePresence mode='wait'>
+                                    {renderPhoneScreen()}
                                 </AnimatePresence>
-
-                                {/* Bottom home bar */}
-                                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gray-600/50 rounded-full" />
                             </div>
-                        </div>
 
-                        {/* Phone shadow */}
-                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-4/5 h-4 bg-black/30 blur-xl rounded-full" />
-                    </motion.div>
+                            {/* Home Indicator */}
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-600 rounded-full"></div>
+                        </motion.div>
+                    </div>
                 </div>
             </div>
         </section>
