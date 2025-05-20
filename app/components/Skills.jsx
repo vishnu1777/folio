@@ -15,13 +15,6 @@ const Skills = () => {
     const isInView = useInView(ref, { once: true, threshold: 0.1 });
 
     useEffect(() => {
-        console.log("Skills state:", {
-            isInView,
-            animationsReady,
-            isMobile,
-            skillsCount: skills.length,
-            loading
-        });
     }, [isInView, animationsReady, isMobile, skills, loading]);
 
     // Client-side only code
@@ -57,7 +50,6 @@ const Skills = () => {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log("response", data)
                 setSkills(data);
                 setLoading(false);
             } catch (error) {

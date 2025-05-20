@@ -51,7 +51,6 @@ export default function ProjectsManager() {
                 }
 
                 const data = await response.json();
-                console.log('Fetched projects:', data);
                 setProjects(data);
                 toastInfo('Projects loaded', `${data.length} projects retrieved successfully`);
             } catch (error) {

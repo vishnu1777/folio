@@ -46,7 +46,6 @@ export default function SkillsManager() {
                 }
 
                 const data = await response.json();
-                console.log('Fetched skills:', data);
                 setSkills(data);
                 toastInfo('Skills loaded', `${data.length} skills retrieved successfully`);
             } catch (error) {

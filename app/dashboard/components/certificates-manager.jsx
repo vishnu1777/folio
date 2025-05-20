@@ -50,7 +50,6 @@ export default function CertificatesManager() {
                 }
 
                 const data = await response.json();
-                console.log('Fetched certificates:', data);
                 setCertificates(data);
                 toastInfo('Certificates loaded', `${data.length} certificates retrieved successfully`);
             } catch (error) {

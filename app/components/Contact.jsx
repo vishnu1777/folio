@@ -74,7 +74,6 @@ export default function Contact() {
         }, 5000);
 
         // Here you would typically send the form data to your backend
-        console.log('Form submitted:', formState);
     };
 
     // Reset to form view
