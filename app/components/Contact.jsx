@@ -96,15 +96,19 @@ export default function Contact() {
             const templateParams = {
                 from_name: formState.name,
                 from_email: formState.email,
-                subject: `New message from ${formState.name}`,
                 message: formState.message,
-                to_name: "Sahithya", // Your name here
+                to_name: "Sahithya",
+                subject: `New Contact from ${formState.name} - Portfolio`,
+
             };
+
+            console.log('Sending email with params:', templateParams);
 
             await window.emailjs.send(
                 process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
                 process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-                templateParams
+                templateParams,
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY  // Adding public key explicitly
             );
 
             // Show success notification
