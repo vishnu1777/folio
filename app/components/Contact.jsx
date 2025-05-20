@@ -396,7 +396,7 @@ export default function Contact() {
                                     </div>
                                     <div>
                                         <p className="text-gray-400 text-sm">Email</p>
-                                        <a href="mailto:youremail@example.com" className="text-white hover:text-pink-400 transition-colors">
+                                        <a href="mailto:sahithyapadival@gmail.com" className="text-white hover:text-pink-400 transition-colors">
                                             sahithyapadival@gmail.com
                                         </a>
                                     </div>
@@ -408,8 +408,8 @@ export default function Contact() {
                                     </div>
                                     <div>
                                         <p className="text-gray-400 text-sm">Phone</p>
-                                        <a href="tel:+1234567890" className="text-white hover:text-pink-400 transition-colors">
-                                            +91 8296574053
+                                        <a href="tel:+91 6361709090" className="text-white hover:text-pink-400 transition-colors">
+                                            +91 6361709090
                                         </a>
                                     </div>
                                 </div>
