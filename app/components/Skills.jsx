@@ -403,7 +403,7 @@ const Skills = () => {
                                                 <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
                                                 {/* Skill logo */}
-                                                <div className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center mb-2">
+                                                <div className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center mb-0">
                                                     <Image
                                                         src={skill.image}
                                                         alt={skill.name}
