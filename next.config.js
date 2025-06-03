@@ -3,7 +3,7 @@ const nextConfig = {
     // Mark login page as client-side rendered to avoid prerendering issues
 
     images: {
-        domains: ['pin.it', 'images.unsplash.com'] // Add other domains as needed
+        domains: ['pin.it', 'images.unsplash.com', 'gifyu.com'] // Add other domains as needed
     }
 };
 
