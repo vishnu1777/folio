@@ -399,6 +399,7 @@ const Skills = () => {
                                                 onMouseLeave={() => setHoveredSkill(null)}
                                                 onClick={() => handleSkillExplode(index)}
                                             >
+
                                                 {/* Bomb fuse - ONLY AT THE TOP */}
                                                 <div className="absolute -top-4 left-1/2 w-2 h-8 bg-gradient-to-b from-pink-300 to-purple-600 -translate-x-1/2"></div>
 
